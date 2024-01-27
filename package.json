@@ -1,0 +1,14 @@
+{
+  "name": "lightcontrol2.0",
+  "version": "1.0.0",
+  "description": "Website based Moving Light Control",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "IsiTapier",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
