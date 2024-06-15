@@ -16,7 +16,7 @@ export class DMXService implements OnModuleInit {
     constructor(private moduleRef: ModuleRef) {}
   
     onModuleInit() {
-      DMXService.deviceService = this.moduleRef.get(DeviceService,{ strict: false });
+      DMXService.deviceService = this.moduleRef.get(DeviceService, { strict: false });
     }
 
     public static artnet() {

@@ -1,21 +1,26 @@
-import { DMXService } from "src/lib/dmx/dmx.service";
 import { DMXDevice } from "../../device/classes/dmxDevice";
 import { STAGE_HEIGHT, STAGE_X, STAGE_Y } from "../../settings";
 import { Position } from "../interfaces/position";
-import { DeviceType } from "../../device/types/deviceType";
 import { ChannelType } from "../../device/types/channelType";
-import { Channel } from "../../device/classes/channel";
+import { MovingHeadDto } from "../dto/movingHead.dto";
 
 export class MovingHead extends DMXDevice {
-    private static current_mh_id = 1;
+    // private static current_mh_id = 1M
 
-    private mhId : number;
+    private mhId : string;
+   
     private xOff : number;
+    
     private yOff : number;
+    
     private heightOff : number;
+    
     private panOff : number;
+    
     private tiltOff : number;
+    
     private maxPan : number;
+    
     private maxTilt : number;
 
     private home : Position = {x: 0, y : 0, height : 0};
@@ -23,8 +28,23 @@ export class MovingHead extends DMXDevice {
     private x : number = 0;
     private y : number = 0;
     private height : number = 0;
+
+    public constructor(mh : MovingHeadDto) {
+        super(mh.device);
+        if(!this.isValid()) return;  // TODO not neccessary??
+
+        this.mhId = mh._id.toString();
+        this.xOff = mh.xOff;
+        this.yOff = mh.yOff;
+        this.heightOff = mh.heightOff;
+        this.panOff = mh.panOff;
+        this.tiltOff = mh.tiltOff; // smallest DMX value where mh 
+        this.maxPan = mh.maxPan;
+        this.maxTilt = mh.maxTilt;
+    }
     
-    public constructor(xOff : number, yOff : number, heightOff : number, panOff : number, tiltOff : number, maxPan : number, maxTilt : number, name : string, address : number, /*universe : number,*/ channels : Channel[]) {
+    /*
+    public constructor(xOff : number, yOff : number, heightOff : number, panOff : number, tiltOff : number, maxPan : number, maxTilt : number, name : string, address : number, /*universe : number,*/   /* channels : Channel[]) {
         super(name, DeviceType.MovingHead, address, channels)
         if(!this.getDeviceId()) return;
 
@@ -36,13 +56,19 @@ export class MovingHead extends DMXDevice {
         this.tiltOff = tiltOff; // smallest DMX value where mh 
         this.maxPan = maxPan;
         this.maxTilt = maxTilt;
-    }
+    }*/
 
-    public initMh() {
+    public initMh() : void {
+        this.init(false);
         this.updatePos(this.x, this.y, this.height, true); // use homepoint
+        // TODO check update
     }
 
-    public getMhId() : number {
+    public setMhId(id : string) : void {
+        this.mhId = id;
+    }
+
+    public getMhId() : string {
         return this.mhId;
     }
 
@@ -50,33 +76,33 @@ export class MovingHead extends DMXDevice {
         return {x: this.x, y: this.y, height: this.height};
     }
 
-    public setHome() {
+    public setHome() : void {
         this.home = this.getPosition();
         // TODO DB store
     }
 
-    public setPosition(position : Position) {
+    public setPosition(position : Position) : void {
         this.setXY(position.x, position.y);
         this.setHeight(position.height);
     }
 
-    public setXY(x : number, y : number) {
+    public setXY(x : number, y : number) : void {
         this.updatePos(x, y);
         this.x = x;
         this.y = y;
     }
 
-    public addXY(x : number, y : number) {
+    public addXY(x : number, y : number) : void {
         this.setXY(this.x+x, this.y+y);
     }
 
-    public setHeight(height : number) {
+    public setHeight(height : number) : void {
         if(height < 0) height = 0;
         this.updatePos(this.x, this.y, height);
         this.height = height;
     }
 
-    private updatePos(x : number = this.x, y : number = this.y, height : number = this.height, update : boolean = false) {
+    private updatePos(x : number = this.x, y : number = this.y, height : number = this.height, update : boolean = false) : void {
         if(update || this.calculatePan(x, y) != this.calculatePan(this.x, this.y))
             this.writeType(ChannelType.Pan, this.calculatePan(x, y));
         if(update || this.calculateTilt(x, y, height) != this.calculateTilt(this.x, this.y, this.height))
@@ -85,7 +111,7 @@ export class MovingHead extends DMXDevice {
     }
 
 
-    private calculatePan(x : number, y : number) {
+    private calculatePan(x : number, y : number) : number {
         x-=this.xOff;
         y-=this.yOff;
         let yPan = y==0?90:Math.abs(Math.atan(x/y)*180/Math.PI);
@@ -93,7 +119,7 @@ export class MovingHead extends DMXDevice {
         return pan;
     }
 
-    private calculateTilt(x : number, y : number, height : number) {
+    private calculateTilt(x : number, y : number, height : number) : number {
         if(height < 0) height = 0;
         x-=this.xOff;
         y-=this.yOff;

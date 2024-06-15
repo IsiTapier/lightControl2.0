@@ -1,41 +1,68 @@
-import { VirtualTimeScheduler } from "rxjs";
 import { DMXService } from "src/lib/dmx/dmx.service";
 import { DeviceType } from "../types/deviceType";
 import { Channel } from "./channel";
 import { ChannelType } from "../types/channelType";
+import { DeviceDto } from "../dto/device.dto";
 
 export class DMXDevice {
-    private static current_device_id = 1;
+    // private static current_device_id = 1;
+    private valid : boolean = false;
 
+    private deviceId : string;
 
-    private deviceId : number;
     private name : string;
+    
     private type : DeviceType;
 
     private address : number;
+
     // private universe : number;
+
     private channels : Channel[] = [];
+
     private channelMultiplier : number;
 
     private virtualMaster : boolean;        // TODO proper Virtual Master with Address
+
     private VMValue : number;
 
     private values: number[];
 
+    public constructor(dto : DeviceDto) {
+        if(dto.address < 1 || dto.address > 512-dto.channels.length*dto.channelMultiplier) return;
+        this.valid = true;
+        this.deviceId = dto._id.toString();
+        this.name = dto.name;
+        this.type = dto.type;
+        this.address = dto.address;
+        this.channels = dto.channels;
+        this.channelMultiplier = dto.channelMultiplier;
+        this.virtualMaster = false; // TODO proper virtual Master
+        this.VMValue = 0;
+        this.values = [dto.channels.length*dto.channelMultiplier]; // TODO store??
 
-    public constructor(name : string, type : DeviceType, address : number, /*universe : number,*/ channels : Channel[], channelMultiplier : number = 1) {
+        // this.init(true); ???
+        // (TODO send initial DMX Values) done?
+    }
+
+    /*public constructor(name : string, type : DeviceType, address : number, /*universe : number,*/  /* channels : Channel[], channelMultiplier : number = 1) {
         if(address < 1 || address > 512-channels.length*channelMultiplier) return;
         this.deviceId = DMXDevice.current_device_id++;
+        this.name = name;
         this.type = type;
         this.address = address;
         this.channels = channels;
         this.channelMultiplier = channelMultiplier;
         this.virtualMaster = false; // TODO proper virtual Master
         this.VMValue = 0;
-        this.values = [channels.length*channelMultiplier];
+        this.values = [channels.length*channelMultiplier]; // TODO store??
 
         // this.init(true); ???
         // (TODO send initial DMX Values) done??
+    }*/
+
+    public isValid() : boolean {
+        return this.valid;
     }
 
     public init(update : boolean) : void {
@@ -46,7 +73,11 @@ export class DMXDevice {
         if(update) DMXService.update();
     }
 
-    public getDeviceId() : number {
+    public setDeviceId(id : string) : void {
+        this.deviceId = id;
+    }
+
+    public getDeviceId() : string {
         return this.deviceId;
     }
 

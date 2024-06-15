@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+/*import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 export type DeviceDcument = Device & Document;
@@ -16,3 +16,4 @@ export class Device {
   password: string;
 }
 export const DeviceSchema = SchemaFactory.createForClass(Device);
+*/

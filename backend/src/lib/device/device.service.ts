@@ -5,23 +5,63 @@ import { DMXService } from '../dmx/dmx.service';
 import { DeviceType } from './types/deviceType';
 import { MovingHeadService } from '../movingHead/movingHead.service';
 import { MovingHead } from '../movingHead/classes/movingHead';
+import { InjectModel } from '@nestjs/mongoose';
+import { Model, mongo } from 'mongoose';
+import { DeviceDto } from './dto/device.dto';
+import { Channel } from './classes/channel';
+import { ChannelType } from './types/channelType';
 
 @Injectable()
 export class DeviceService {
-  constructor(
-    @Inject(forwardRef(() => MovingHeadService))
-    private movingHeadService : MovingHeadService
-  ) {}
-
   private devices : DMXDevice[] = [];
+
+  constructor(
+    @Inject(forwardRef(() => MovingHeadService)) private movingHeadService : MovingHeadService,
+    @InjectModel("devices") private readonly deviceModel: Model<DeviceDto>,
+  ) {
+    this.loadDB(); 
+  }
+
+  private addDB(createDeviceDto : DeviceDto) {
+    const createdDevice = new this.deviceModel(createDeviceDto);
+    // TEMP
+    console.log(createdDevice._id);
+    return createdDevice.save();
+  }
+
+  private removeDB(id : string) {
+    let _id = new mongo.ObjectId(id);
+    return this.deviceModel.findByIdAndDelete(_id).exec();
+  } 
   
-  private getDeviceIterator(deviceId : number) : number {
+  private updateDB(id : string, updateDeviceDto : DeviceDto) {
+    let _id = new mongo.ObjectId(id);
+    this.deviceModel.findByIdAndUpdate(_id, updateDeviceDto).exec();
+  }
+
+  private getDB(): Promise<DeviceDto[]> { // find all
+    return this.deviceModel.find().exec();
+  }
+  
+  private async loadDB() {
+    let dbDevices = await this.getDB();
+    for(let device of dbDevices) if(device.type !== DeviceType.MovingHead) console.log(await this.addDevice(device, false)); // TODO Debug if addDevice throws ERROR
+
+    console.log(this.devices.length+" Devices loaded from DB");
+
+    // TEMP
+    this.addDevice(new DeviceDto("test2", DeviceType.Par, 83, [new Channel(ChannelType.Red, 1, 200), new Channel(ChannelType.Green, 2, 20), new Channel(ChannelType.Blue, 3)]));
+    this.updateDB(this.devices[this.devices.length-1].getDeviceId(), {name: "test"});
+  }
+
+  
+  private getDeviceIterator(deviceId : string) : number {
     for(let i = 0; i < this.devices.length; i++)
       if(this.devices[i].getDeviceId() == deviceId) return i;
     return -1;
   }
 
-  private isValidDeviceId(deviceId : number) : boolean {
+  private isValidDeviceId(deviceId : string) : boolean {
     return this.getDeviceIterator(deviceId) !== -1;
   }
 
@@ -29,27 +69,30 @@ export class DeviceService {
     return this.devices;
   }
   
-  public addDevice(device : DMXDevice, update : boolean = true) {
-    if(!device.getDeviceId()) return "ERROR: device parameters are invalid";
-    
+  public async addDevice(deviceDto : DeviceDto, addDB : boolean = true, update : boolean = true) {
+    let device = new DMXDevice(deviceDto);
+    if(!device.isValid()) return "ERROR: device parameters are invalid";
     for(let d of this.devices) {
       if(device.getStartAddress() >= d.getStartAddress() && device.getStartAddress() <= d.getEndAddress() || device.getStartAddress() <= d.getStartAddress() && device.getEndAddress() >= d.getStartAddress()) 
         return "ERROR: device address range overlaps with existing device"
     }
 
+    if(addDB && deviceDto.type !== DeviceType.MovingHead) this.addDB(deviceDto);
+    
     this.devices.push(device);
-    // TEMP DEBUG
-    // console.log(device.getDeviceId());
-
     device.init(false); // TODO maybe update false in order to prevent flicker on start up (give time to update values)
-    // TODO device init
 
-    // console.log("added device: "+device);
+    console.log("added device: "+device);
 
     return "STATUS: successful added device";
   }
 
-  public removeDevice(deviceId : number) : String {
+  public getDevice(deviceId : string) : DMXDevice {
+    if(!this.isValidDeviceId(deviceId)) return null; // TODO Error ???
+    return this.devices[this.getDeviceIterator(deviceId)];
+  }
+
+  public removeDevice(deviceId : string) : String {
     if(!this.isValidDeviceId(deviceId)) return "ERROR: deviceId not found";
     // console.log("remove device "+deviceId);
     let device = this.getDevice(deviceId);
@@ -59,14 +102,14 @@ export class DeviceService {
     return "STATUS: successful removed device";
   }
   
-  public updateDevice(deviceId : number, updatedDevice : DMXDevice) { 
+  public updateDevice(deviceId : string, updatedDevice : DMXDevice) { 
     if(!this.isValidDeviceId(deviceId)) return "ERROR: deviceId not found";
     if(updatedDevice === null) return "ERROR: updated device parameters are invalid" // TODO check if working
     this.devices.splice(this.getDeviceIterator(deviceId), 1, updatedDevice);
     return "STATUS: successful updated device";
   }
 
-  public setChannel(deviceId : number, channel : number, value : number) {
+  public setChannel(deviceId : string, channel : number, value : number) {
     if(!this.isValidDeviceId(deviceId)) return "ERROR: deviceId not found";
     return this.devices[this.getDeviceIterator(deviceId)].writeChannel(channel, value, true);  // TODO update DMX ??
     return "STATUS: successful set channel "+channel+" to "+value;
@@ -77,10 +120,4 @@ export class DeviceService {
     for(let device of this.devices) hasChanged ||= device.update();
     if(hasChanged) DMXService.update();
   }
-
-  public getDevice(deviceId : number) : DMXDevice {
-    if(!this.isValidDeviceId(deviceId)) return null; // TODO Error ???
-    return this.devices[this.getDeviceIterator(deviceId)];
-  }
-
 }
