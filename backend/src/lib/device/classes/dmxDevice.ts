@@ -5,37 +5,23 @@ import { ChannelType } from "../types/channelType";
 import { DeviceDto } from "../dto/device.dto";
 
 export class DMXDevice {
-    // private static current_device_id = 1;
-    private valid : boolean = false;
-
     private deviceId : string;
-
     private name : string;
-    
     private type : DeviceType;
-
     private address : number;
-
     // private universe : number;
-
     private channels : Channel[] = [];
-
     private channelMultiplier : number;
-
     private virtualMaster : boolean;        // TODO proper Virtual Master with Address
-
     private VMValue : number;
-
     private values: number[];
 
     public constructor(dto : DeviceDto) {
-        if(dto.address < 1 || dto.address > 512-dto.channels.length*dto.channelMultiplier) return;
-        this.valid = true;
-        this.deviceId = dto._id.toString();
+        this.deviceId = dto._id;
         this.name = dto.name;
         this.type = dto.type;
         this.address = dto.address;
-        this.channels = dto.channels;
+        this.channels = dto.channels.map((ch) => new Channel(ch.type, ch.inputAddress, ch.defaultValue));
         this.channelMultiplier = dto.channelMultiplier;
         this.virtualMaster = false; // TODO proper virtual Master
         this.VMValue = 0;
@@ -45,24 +31,13 @@ export class DMXDevice {
         // (TODO send initial DMX Values) done?
     }
 
-    /*public constructor(name : string, type : DeviceType, address : number, /*universe : number,*/  /* channels : Channel[], channelMultiplier : number = 1) {
-        if(address < 1 || address > 512-channels.length*channelMultiplier) return;
-        this.deviceId = DMXDevice.current_device_id++;
-        this.name = name;
-        this.type = type;
-        this.address = address;
-        this.channels = channels;
-        this.channelMultiplier = channelMultiplier;
-        this.virtualMaster = false; // TODO proper virtual Master
-        this.VMValue = 0;
-        this.values = [channels.length*channelMultiplier]; // TODO store??
-
-        // this.init(true); ???
-        // (TODO send initial DMX Values) done??
-    }*/
-
-    public isValid() : boolean {
-        return this.valid;
+    public isEqualTo(device : DeviceDto) : boolean {
+        return  this.deviceId === device._id && 
+                this.name === device.name && 
+                this.type === device.type && 
+                this.address === device.address && 
+                JSON.stringify(this.channels)===JSON.stringify(device.channels) &&
+                this.channelMultiplier === device.channelMultiplier;
     }
 
     public init(update : boolean) : void {
@@ -97,8 +72,8 @@ export class DMXDevice {
         this.name = name;
     }*/
 
-    public writeChannel(channel : number, value : number, update : boolean = false) {
-        if(channel < 0 || channel > this.channels.length * this.channelMultiplier) return "ERROR: channel is not in range of the device channels";
+    public writeChannel(channel : number, value : number, update : boolean = false) : string {
+        if(channel < 0 || channel >= this.channels.length * this.channelMultiplier) return "ERROR: channel is not in range of the device channels";
         if(value < 0 || value > 255) return "ERROR: value not in the range 0-255";
 
         this.values[channel] = value; // TODO Virtual Master ???
@@ -107,9 +82,8 @@ export class DMXDevice {
         return "STATUS: successful set channel "+channel+" to "+value;
     }
 
-    public writeType(type : ChannelType, value : number, update : boolean = false) {
+    public writeType(type : ChannelType, value : number, update : boolean = false)  : string {
         if(value < 0 || value > 255) return "ERROR: value not in the range 0-255";
-
 
         if(type === ChannelType.None) return "ERROR: no valid channel type";
         if(this.virtualMaster === true) {
@@ -125,15 +99,18 @@ export class DMXDevice {
         return "STATUS: successful set all channels of type "+type+" to "+value;
     }
 
+    public blackout(update : boolean = true) : void {
+        for(let i = 0; i < this.channels.length*this.channelMultiplier; i++) {
+            this.writeChannel(i, 0);
+        }
+        if(update) DMXService.update();
+    }
+
    /* public writeMaster(value : number) {
         this.writeType('M', value);
     }*/
 
-   /* public blackout() {
-        this.writeMaster(0);
-    }*/
-
-    public update(update: boolean = false) {
+    public update(update: boolean = false) : boolean { // TODO update needed?
         let hasChanged = false;
         for(let i = 0; i < this.channels.length; i++) {
             if(this.channels[i].inputAddress === 0) continue;

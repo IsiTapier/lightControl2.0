@@ -1,60 +1,53 @@
 
-import { Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch,  Put } from '@nestjs/common';
 import { MovingHeadService } from './movingHead.service';
+import { MovingHeadDto } from './dto/movingHead.dto';
+import { DeviceService } from '../device/device.service';
 
 @Controller('movingHeads')
 export class MovingHeadController {
-  constructor(private movingHeadService: MovingHeadService) {}
+  constructor(private readonly movingHeadService: MovingHeadService, private readonly deviceService : DeviceService) {}
 
   @Patch()
-  add() { // TODO Querrys
-    // return this.movingHeadService.addMovingHead(); // TODO convert to mh
-  }
+  add(@Body('mh') mh : MovingHeadDto) {
+    if(mh._id && this.movingHeadService.isValidMhId(mh._id)) 
+      throw new HttpException('REQUEST-ERROR: mhId already exists', HttpStatus.BAD_REQUEST);
+    if(mh.device._id && this.deviceService.isValidDeviceId(mh.device._id))
+      throw new HttpException('REQUEST-ERROR: deviceId already exists', HttpStatus.BAD_REQUEST);
+    return this.movingHeadService.addMovingHead(mh);
+  } 
 
-  @Delete()
-  remove(@Query("mhId") mhId) {
-    if(!mhId) return 'REQUEST-ERROR: mhId is invalid';
+  @Delete(':id')
+  remove(@Param('id') mhId : string) {
+    if(!mhId || !this.movingHeadService.isValidMhId(mhId))
+      throw new HttpException('REQUEST-ERROR: mhId is invalid', HttpStatus.BAD_REQUEST);
     return this.movingHeadService.removeMovingHead(mhId);
   }
 
   @Put()
-  update(@Query("mhId") mhId) { // TODO Querries
-    if(!mhId) return 'REQUEST-ERROR: mhId is invalid';
-    // return this.movingHeadService.updateMovingHead(mhId, ); // TODO convert to mh
+  update(@Body('mh') mh : MovingHeadDto) {
+    if(!mh._id || !this.movingHeadService.isValidMhId(mh._id)) 
+      throw new HttpException('REQUEST-ERROR: mhId is invalid', HttpStatus.BAD_REQUEST);
+    if(this.movingHeadService.getMovingHead(mh._id).isEqualToMh(mh))
+      throw new HttpException('REQUEST-ERROR: updated moving head is equal to old one', HttpStatus.BAD_REQUEST);
+    mh.device._id = this.movingHeadService.getMovingHead(mh._id).getDeviceId();
+    return this.movingHeadService.updateMovingHead(mh);
   }
 
   @Get()
   getMovingHeads() {
-    let mh = this.movingHeadService.getMovingHeads();
-    // TODO return (JSON) or DTO
+    return this.movingHeadService.getMovingHeads();
   }
 
-  @Get("positions")
-  getPositions() {
-    // TODO get positions of every moving head and send it
+  @Put(':id')
+  setChannel(@Param('id') mhId : string, @Body("channel") channel : number, @Body("value") value : number) {
+    // if(!mhId || !this.movingHeadService.isValidMhId(mhId))
+      // throw new HttpException('REQUEST-ERROR: mhID is invalid', HttpStatus.BAD_REQUEST);
+    // if(!channel) return 'REQUEST-ERROR: channel is invalid'
+    // if(value < 0 || value > 255) return 'REQUEST-ERROR: value not in the range 0-255';
+    let result = this.movingHeadService.setChannel(mhId, channel, value);
+    if(result.includes('ERROR')) throw new HttpException(result, HttpStatus.BAD_REQUEST);
+    return result;
   }
-
-  @Put("channel")
-  setChannel(@Query("mhId") mhId, @Query("channel") channel, @Query("value") value) {
-    if(!mhId) return 'REQUEST-ERROR: mhId is invalid';
-    if(!channel) return 'REQUEST-ERROR: channel is invalid'
-    if(value < 0 || value > 255) return 'REQUEST-ERROR: value not in the range 0-255';
-    return this.movingHeadService.setChannel(mhId, channel, value);
-  }
-
-  @Put("position")
-  setPosition(@Query("mhId") mhId, @Query("x") x, @Query("y") y) {
-    if(!mhId) return 'REQUEST-ERROR: mhId is invalid';
-    if(this.movingHeadService.getMovingHead(mhId) === null) return "ERROR: mhId doesn't exist"
-    this.movingHeadService.getMovingHead(mhId).setXY(x, y);
-  }
-
-  @Put("height")
-  setHeight(@Query("mhId") mhId, @Query("height") height) {
-    if(!mhId) return 'REQUEST-ERROR: mhId is invalid';
-    if(height < 0) return 'REQUEST-ERROR: height is invalid';
-    if(this.movingHeadService.getMovingHead(mhId) === null) return "ERROR: mhId doesn't exist"
-    this.movingHeadService.getMovingHead(mhId).setHeight(height);
-  }
-
 }
+

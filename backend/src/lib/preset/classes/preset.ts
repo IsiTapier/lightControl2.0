@@ -1,5 +1,5 @@
 import { MovingHead } from "src/lib/movingHead/classes/movingHead";
-import { Position } from "src/lib/movingHead/interfaces/position";
+import { Position } from "src/lib/movingHead/classes/position";
 
 export class Preset {
     private static current_preset_id = 0;

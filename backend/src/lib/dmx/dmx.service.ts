@@ -1,13 +1,11 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DeviceService } from '../device/device.service';
 import { ModuleRef } from '@nestjs/core';
-import { DMXDevice } from '../device/classes/dmxDevice';
-import { DeviceType } from '../device/types/deviceType';
-import { ChannelType } from '../device/types/channelType';
-import { Channel } from '../device/classes/channel';
 
 @Injectable()
 export class DMXService implements OnModuleInit {
+    private static readonly logger = new Logger(DMXService.name);
+    
     private static deviceService: DeviceService;
     private static dmxnet;
     private static sender;
@@ -33,6 +31,7 @@ export class DMXService implements OnModuleInit {
     }
 
     public static setChannel(channel: number, value: number, update: boolean) {
+        // this.logger.debug("channel: "+channel+" value: "+value+" update: "+update);
         console.log("channel: "+channel+" value: "+value+" update: "+update);
         if(channel < 1 || channel > 512) return;
         if(value < 0 || value > 255) return;
@@ -41,7 +40,7 @@ export class DMXService implements OnModuleInit {
     }
 
     public static update() {
-        console.log("update");
+        this.logger.debug("update");
         this.sender.transmit();
     }
 
@@ -77,25 +76,5 @@ export class DMXService implements OnModuleInit {
             base_refresh_interval: 100 // Default interval for sending unchanged ArtDmx
         });
         return;
-        // Set Channels
-        this.sender.setChannel(0, 255);
-        this.sender.setChannel(1, 128);
-
-        // Fill Channelss
-        // sender.fillChannels(1, 20, 10);
-
-        // Prepare Channel 26+27 after 10 s and send next secondly
-        setTimeout(function() {
-            this.sender.prepChannel(1, 0);
-            this.sender.prepChannel(2, 255);
-            this.sender.prepChannel(3, 255);
-            this.sender.transmit();
-        }, 2000);
-        
-        // Stop sender after 5 secondsd
-        // setTimeout(function() {
-        // sender.stop();
-        // }, 50000);
-        console.log("Arnet started");
     }
 }

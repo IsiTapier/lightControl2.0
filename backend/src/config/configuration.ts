@@ -5,6 +5,7 @@ export default () => ({
     },
     DATABASE_USER: 'test',
     DATABASE_PASSWORD: 123,
+    PORT: 3000,
 });
 
 

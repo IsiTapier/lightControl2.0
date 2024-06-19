@@ -1,13 +1,14 @@
 
-import { Controller, Delete, Get, Param, Patch, Post, Put, Query } from '@nestjs/common';
-import { sender } from 'dmxnet';
+import { Body, Controller, Delete, Get, HttpException, HttpStatus, Param, Patch, Post, Put, Query, UsePipes, ValidationPipe } from '@nestjs/common';
 import { DMXService } from 'src/lib/dmx/dmx.service';
-import { DeviceModule } from './device.module';
 import { DeviceService } from './device.service';
+import { DeviceDto } from './dto/device.dto';
+import { ValidIdType } from './util/idValidator';
+import { DeviceType } from './types/deviceType';
 
 @Controller('devices')
 export class DeviceController {
-  constructor(private deviceService : DeviceService) {}
+  constructor(private readonly deviceService : DeviceService) {}
 
   @Get("test")
   test(): string {
@@ -21,13 +22,13 @@ export class DeviceController {
     if(params.color === "red") this.red(params.int);
     else if(params.color === "green") this.green(params.int);
     else if (params.color === "blue") this.blue(params.int);
-    else {
+    else { 
     // DMXService.getSender().fillChannels(1, 3, 0);
     DMXService.getSender().prepChannel(1, 0);
     DMXService.getSender().prepChannel(2, 0);
     DMXService.getSender().prepChannel(3, 0);
     DMXService.getSender().transmit();
-      }
+    } 
   }
 
   @Get("red")
@@ -58,33 +59,45 @@ export class DeviceController {
   }
 
   @Patch()
-  add() { // TODO Querrys
-    // return this.deviceService.addDevice(); // TODO convert to Device
+  @UsePipes(new ValidationPipe({ groups: [ValidIdType.AVAILABLE]}))
+  add(@Body('device') device : DeviceDto) {
+    if(device.type === DeviceType.MovingHead) 
+      throw new HttpException('to register a moving head please use /movingHeads', HttpStatus.BAD_REQUEST);
+    // device.channels = device.channels.map((ch) => new Channel(ch.type, ch.inputAddress, ch.defaultValue));
+    // device = new DeviceDto(device.name, device.type, device.address, device.channels, device.channelMultiplier);
+    return this.deviceService.addDevice(device);
   }
 
-  @Delete()
-  remove(@Query("deviceId") deviceId) {
-    if(!deviceId) return 'REQUEST-ERROR: deviceId is invalid';
+  @Delete(':id')
+  remove(@Param('id') deviceId : string) {
+    if(!deviceId || !this.deviceService.isValidDeviceId(deviceId))
+      throw new HttpException('REQUEST-ERROR: deviceId is invalid', HttpStatus.BAD_REQUEST);
     return this.deviceService.removeDevice(deviceId);
   }
 
   @Put()
-  update(@Query("deviceId") deviceId) { // TODO Querries
-    if(!deviceId) return 'REQUEST-ERROR: deviceId is invalid';
-    // return this.deviceService.updateDevice(deviceId, ); // TODO convert to Device
+  @UsePipes(new ValidationPipe({ groups: [ValidIdType.EXISTS, ValidIdType.UNEQUAL]}))
+  update(@Body('device') device: DeviceDto) {
+    if(device.type === DeviceType.MovingHead) 
+      throw new HttpException('to update a moving head please use /movingHeads', HttpStatus.BAD_REQUEST);
+    // if(!device._id || !this.deviceService.isValidDeviceId(device._id)) return 'REQUEST-ERROR: deviceId is invalid'; // TODO as validation constraint
+    // device.channels = device.channels.map((ch) => new Channel(ch.type, ch.inputAddress, ch.defaultValue)); // TODO rework
+    return this.deviceService.updateDevice(device);
   }
 
   @Get()
   getDevices() {
-    let mh = this.deviceService.getDevices();
-    // TODO return (JSON) or DTO
+    return this.deviceService.getDevices();
   }
 
-  @Put("channel")
-  setChannel(@Query("deviceId") deviceId, @Query("channel") channel, @Query("value") value) {
-    if(!deviceId) return 'REQUEST-ERROR: deviceId is invalid';
-    if(!channel) return 'REQUEST-ERROR: channel is invalid'
-    if(value < 0 || value > 255) return 'REQUEST-ERROR: value not in the range 0-255';
-    return this.deviceService.setChannel(deviceId, channel, value);
+  @Put(':id')
+  @UsePipes(new ValidationPipe({ groups: [ValidIdType.EXISTS]}))
+  setChannel(@Param('id') deviceId, @Body("channel") channel, @Body("value") value) {
+    // if(!this.deviceService.isValidDeviceId(deviceId)) return 'REQUEST-ERROR: deviceId is invalid';
+    // if(channel < 0) return 'REQUEST-ERROR: channel is invalid'
+    // if(value < 0 || value > 255) return 'REQUEST-ERROR: value not in the range 0-255';
+    let result = this.deviceService.setChannel(deviceId, channel, value);
+    if(result.includes('ERROR')) throw new HttpException(result, HttpStatus.BAD_REQUEST);
+    return result;
   }
 }

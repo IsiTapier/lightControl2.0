@@ -1,53 +1,42 @@
-import { Inject, Injectable, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, Logger, forwardRef } from '@nestjs/common';
 import { MovingHead } from './classes/movingHead';
 import { DeviceService } from '../device/device.service';
 import { MovingHeadDto } from './dto/movingHead.dto';
-import { Model, mongo } from 'mongoose';
+import { Model } from 'mongoose';
 import { InjectModel } from '@nestjs/mongoose';
 import { Channel } from '../device/classes/channel';
 import { ChannelType } from '../device/types/channelType';
+import { DMXService } from '../dmx/dmx.service';
+import { Position } from './classes/position';
 
 @Injectable()
 export class MovingHeadService {
+  private readonly logger = new Logger(MovingHeadService.name);
   private movingHeads : MovingHead[] = [];
 
   constructor(
-    @Inject(forwardRef(() => DeviceService)) private deviceService : DeviceService,
+    @Inject(forwardRef(() => DeviceService)) private readonly deviceService : DeviceService,
     @InjectModel("movingHeads") private readonly movingHeadModel: Model<MovingHeadDto>,
   ) {
     this.loadDB();
   }
 
-
   private addDB(createMovingHeadDto: MovingHeadDto) {
-    // return new this.movingHeadModel(createMovingHeadDto);
-    /*let device = await new this.deviceModel(createMovingHeadDto.device);
-    let mho = await new this.movingHeadModel(createMovingHeadDto);
-    // mho.device = device;
-    await device.save();
-    await mho.save();
-    console.log(mho._id);
-    console.log(await this.findOne(mho._id));*/
-
     const createdMovingHead = new this.movingHeadModel(createMovingHeadDto);
-    // TEMP
-    console.log(createdMovingHead._id);
-    createdMovingHead.save();
-    return createdMovingHead._id;
+
+    this.logger.log('New moving head: '+createdMovingHead._id);
+    return createdMovingHead.save();  // TODO debug if successfull
   }
   
   private removeDB(id : string) {
-    let _id = new mongo.ObjectId(id);
-    return this.movingHeadModel.findByIdAndDelete(_id).exec();
+    return this.movingHeadModel.findByIdAndDelete(id).exec();    // TODO debug if successfull
   }
 
-  private updateDB(id : string, updateMovingHeadDto : MovingHeadDto) {
-    let _id = new mongo.ObjectId(id);
-    this.movingHeadModel.findByIdAndUpdate(_id, updateMovingHeadDto).exec();
+  private updateDB(updateMovingHeadDto /*: MovingHeadDto*/) {  // TODO movingHead DTO Object with optional paramters
+    return this.movingHeadModel.findByIdAndUpdate(updateMovingHeadDto._id, updateMovingHeadDto).exec();    // TODO debug if successfull
   }
 
-  async getDB(): Promise<MovingHeadDto[]> {
-    // return this.movingHeadModel.find().populate('device', '', this.deviceModel).exec();
+  private getDB(): Promise<MovingHeadDto[]> {
     return this.movingHeadModel.find().exec();
   }
 
@@ -66,13 +55,14 @@ export class MovingHeadService {
     return (await this.findByName(name))._id;
   }*/
 
-  private async loadDB() {
-    let dbMovingHeads = await this.movingHeadModel.find().exec();
-    for(let mh of dbMovingHeads) console.log(await this.addMovingHead(mh, false)); // TODO Debug if addDevice throws ERROR
+  private async loadDB() : Promise<void> {
+    let dbMovingHeads = await this.getDB();
+    for(let mh of dbMovingHeads) this.logger.debug(await this.addMovingHead(mh, false)); // TODO Debug if addDevice throws ERROR
 
-    console.log(this.movingHeads.length+ " Moving Heads loaded from DB");
+    this.logger.log(this.movingHeads.length+ " Moving Heads loaded from DB");
 
     // TEMP
+    return;
     this.addMovingHead(new MovingHeadDto(-494.6, -467.8, 701.5, 0, 21-2, 540, 240, "MH1", 1,  [new Channel(ChannelType.Pan), new Channel(ChannelType.Tilt), new Channel(ChannelType.PTSpeed), new Channel(ChannelType.Zoom, 102), new Channel(ChannelType.Intensity, 101), new Channel(ChannelType.Effect, 0, 255), new Channel(ChannelType.White), new Channel(ChannelType.WarmWhite), new Channel(ChannelType.ColorTemp, 508, 50), new Channel(ChannelType.None), new Channel(ChannelType.None), new Channel(ChannelType.None), new Channel()])); // TODO shorter  // TODO negative pan offset
     this.addMovingHead(new MovingHeadDto(-338.6, -467.8, 685.5, 0, 23.5, 540, 240, "MH2", 14, [new Channel(ChannelType.Pan), new Channel(ChannelType.Tilt), new Channel(ChannelType.PTSpeed), new Channel(ChannelType.Zoom, 104), new Channel(ChannelType.Intensity, 103), new Channel(ChannelType.Effect, 0, 255), new Channel(ChannelType.White), new Channel(ChannelType.WarmWhite), new Channel(ChannelType.ColorTemp, 508, 50), new Channel(ChannelType.None), new Channel(ChannelType.None), new Channel(ChannelType.None), new Channel()]));
     this.addMovingHead(new MovingHeadDto(-177.9, -467.8, 666.7, 0, 20.5, 540, 240, "MH3", 27, [new Channel(ChannelType.Pan), new Channel(ChannelType.Tilt), new Channel(ChannelType.PTSpeed), new Channel(ChannelType.Zoom, 106), new Channel(ChannelType.Intensity, 105), new Channel(ChannelType.Effect, 0, 255), new Channel(ChannelType.White), new Channel(ChannelType.WarmWhite), new Channel(ChannelType.ColorTemp, 508, 50), new Channel(ChannelType.None), new Channel(ChannelType.None), new Channel(ChannelType.None), new Channel()]));
@@ -89,60 +79,122 @@ export class MovingHeadService {
     return -1;
   }
 
-  private isValidMhId(mhId: string) : boolean {
+  public isValidMhId(mhId: string) : boolean {
       return this.getMhIterator(mhId) !== -1
   }
 
-  public getMovingHeads() {
+  public getMovingHeads() : MovingHead[] {
     return this.movingHeads;
   }
   
-  public async addMovingHead(movingHeadDto : MovingHeadDto, addDB : boolean = true) {
-    let mh = new MovingHead(movingHeadDto);
-    if(!mh.isValid()) return "ERROR: moving head parameters are invalid";
-    let result = await this.deviceService.addDevice(movingHeadDto.device, addDB);
-    if(result.includes("ERROR")) return result;
+  public getMovingHead(mhId : string) : MovingHead {
+    if(!this.isValidMhId(mhId)) return null;  // TODO Error ???
+    return this.movingHeads[this.getMhIterator(mhId)];
+  }
 
-    if(addDB) this.addDB(movingHeadDto);
+  public findMovingHeadId(deviceId : string) : string {
+    for(let mh of this.movingHeads)
+      if(mh.getDeviceId() === deviceId) return mh.getMhId();
+    return null;
+  }
+  
+  public addMovingHead(movingHeadDto : MovingHeadDto, addDB : boolean = true) : string | void {
+    if(this.isValidMhId(movingHeadDto._id)) return this.logger.error('moving head id already exists');
+    let mh = new MovingHead(movingHeadDto);
+    let result = this.deviceService.addDevice(movingHeadDto.device, addDB);
+    if(!result) return "ERROR: Device not valid"; // TODO test
+
+    this.logger.debug("add moving head: "+mh);
+
+    if(addDB) this.addDB(movingHeadDto); // TODO Test
 
     this.movingHeads.push(mh);
     mh.initMh(); 
 
-    console.log("added moving head: "+mh);
-
+    this.logger.log("successful added moving head");
     return "STATUS: successful added moving head";
   }
 
-  public removeMovingHead(mhId : string) : String {
-    if(!this.isValidMhId(mhId)) return "ERROR: mhId not found";
-    // console.log("remove MovingHead "+mhId);
+  public removeMovingHead(mhId : string) : string | void {
+    if(!this.isValidMhId(mhId)) return this.logger.error('mhId not found');
+    
+    this.logger.debug("remove MovingHead "+mhId);
+    
+    this.removeDB(mhId);
+
     let mh = this.getMovingHead(mhId);
     this.movingHeads.splice(this.getMhIterator(mhId), 1);
-    this.deviceService.removeDevice(mh.getDeviceId());
+    if(this.deviceService.isValidDeviceId(mh.getDeviceId())) this.deviceService.removeDevice(mh.getDeviceId());
 
+    this.logger.log('successful removed moving head');
     return "STATUS: successful removed moving head";
   }
 
-  public updateMovingHead(mhId : string, updatedMh : MovingHead) {
-    if(!this.isValidMhId(mhId)) return "ERROR: mhId not found";
-    if(updatedMh === null) return "ERROR: updated moving head parameters are invalid" // TODO check if working
-    this.movingHeads.splice(this.getMhIterator(mhId), 1, updatedMh);
-    this.deviceService.updateDevice(this.getMovingHead(mhId).getDeviceId(), updatedMh);
+  public updateMovingHead(updateMhDto : MovingHeadDto) : string | void { // TODO check if type not mh
+    let id = updateMhDto._id;
+    if(!this.isValidMhId(id)) return this.logger.error('mhId not found');
+    if(this.getMovingHead(id).isEqualToMh(updateMhDto)) return this.logger.error('updated moving head is equal to old one');
+    let updatedMh = new MovingHead(updateMhDto);
+    if(!this.deviceService.isValidDeviceAddress(updatedMh)) return this.logger.error('updated moving head address range overlaps with existing device');
+    if(!this.deviceService.updateDevice(updateMhDto.device)) return this.logger.error('updated Device not valid');
+    
+    this.logger.debug("update moving head "+id);
+
+    this.updateDB(updateMhDto);
+
+    this.movingHeads.splice(this.getMhIterator(id), 1, updatedMh);
+    updatedMh.initMh();
+
+    this.logger.log('successful updated moving head');
     return "STATUS: successful updated moving head";
   }
 
-  public setChannel(mhId : string, channel : number, value : number) {
+  public setChannel(mhId : string, channel : number, value : number) : string {
+    if(!this.isValidMhId(mhId)) return 'ERROR: mhId not found';
+    return this.getMovingHead(mhId).writeChannel(channel, value, true);  // TODO update ??
+  }
+
+  public update() : void {  // TODO neccessary ???
+    let hasChanged = false;
+    for(let mh of this.movingHeads) hasChanged ||= mh.update();
+    if(hasChanged) DMXService.update();
+  }
+
+  public getPositions()  {
+    let positions = [];
+
+    for(let mh of this.movingHeads)
+      positions.push({id: mh.getMhId(), position: mh.getPosition()});
+
+    return positions;
+  }
+
+  public setPosition(mhId : string, position : Position) : string {
     if(!this.isValidMhId(mhId)) return "ERROR: mhId not found";
-    return this.movingHeads[this.getMhIterator(mhId)].writeChannel(channel, value, true);  // TODO update ??
+
+    this.getMovingHead(mhId).setPosition(position);
+
+    return "STATUS: successful set Position to ( "+position.x+" | "+position.y+" | "+position.height+" )";
   }
 
-  public update() {
-    for(let mh of this.movingHeads) mh.update();
+  public goHome(mhId : string) {
+    if(!this.isValidMhId(mhId)) return "ERROR: mhId not found";
+    
+    this.getMovingHead(mhId).goHome();
+
+    return "STATUS: Successful Activated Home Point"
   }
 
-  public getMovingHead(mhId : string) : MovingHead {
-    if(!this.isValidMhId(mhId)) return null;
-    return this.movingHeads[this.getMhIterator(mhId)];
-  }
+  public setHome(mhId : string, position : Position) {
+    if(!this.isValidMhId(mhId)) return "ERROR: mhId not found";
 
+    let mh = this.getMovingHead(mhId);
+    let home = mh.getHome();
+    mh.setHome(position);
+    let newHome = mh.getHome();
+    if(JSON.stringify(newHome) !== JSON.stringify(home))
+      this.updateDB({_id : mh.getMhId(), home: newHome});  // TODO more tidy coding
+
+    return "STATUS: successful set new Home Point";
+  }
 }

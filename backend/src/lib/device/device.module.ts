@@ -5,6 +5,8 @@ import { MovingHeadModule } from '../movingHead/movingHead.module';
 import { MongooseModule } from '@nestjs/mongoose';
 import { User, UserSchema } from './schemas/user.schema';
 import { DeviceSchema } from './dto/device.dto';
+import { IsAvailableDMXAddressConstraint } from './util/addressValidator';
+import { IsValidIdConstraint } from './util/idValidator';
 
 @Module({
   imports: [
@@ -12,7 +14,11 @@ import { DeviceSchema } from './dto/device.dto';
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }, { name: "devices", schema: DeviceSchema }]),
   ],
   controllers: [DeviceController],
-  providers: [DeviceService],
+  providers: [
+    DeviceService,
+    IsAvailableDMXAddressConstraint,
+    IsValidIdConstraint,
+  ],
   exports: [DeviceService],
 })
 
