@@ -1,12 +1,13 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component } from '@angular/core';
+import { ip } from '../database';
 
 @Component({
-  selector: 'app-tab2',
-  templateUrl: 'tab2.page.html',
-  styleUrls: ['tab2.page.scss']
+  selector: 'app-presets',
+  templateUrl: 'presets.page.html',
+  styleUrls: ['presets.page.scss']
 })
-export class Tab2Page {
+export class PresetsPage {
   
   constructor(private http: HttpClient) {}
 
@@ -50,27 +51,27 @@ export class Tab2Page {
       device: device,
       other: "tester",
     }
-   this.http.patch('http://localhost:3000/devices', data).subscribe((result) => { console.log(result); });   
+   this.http.patch('http://'+ip+':3000/devices', data).subscribe((result) => { console.log(result); });   
   }
 
   remove() : void {
     let id = '6670aa31c3f832a7a78c34d8';
-    this.http.delete('http://localhost:3000/devices'+'/'+id).subscribe((result) => { console.log(result); });   
+    this.http.delete('http://'+ip+':3000/devices'+'/'+id).subscribe((result) => { console.log(result); });   
   }
 
   update() : void {
     let id = '6670aa31c3f832a7a78c34d8';
     const device = {_id: id, name: 'updated device', type: 1, address: 161, channels: [{type: 9, defaultValue: 100}, {type: 10, defaultValue: 50}, {blabla: "asdfasdf"}], channelMultiplier: 3}
-    this.http.put('http://localhost:3000/devices', {device: device}).subscribe((result) => { console.log(result); });   
+    this.http.put('http://'+ip+':3000/devices', {device: device}).subscribe((result) => { console.log(result); });   
   }
 
   get() : void {  
-  this.http.get('http://localhost:3000/devices').subscribe((result) => { console.log(result); }); 
+  this.http.get('http://'+ip+':3000/devices').subscribe((result) => { console.log(result); }); 
   }
 
   setChannel() : void {  
     let id = '6670aa31c3f832a7a78c34d8';
-    this.http.put('http://localhost:3000/devices/'+id, {channel: 3, value: 0}).subscribe((result) => { console.log(result); }); 
+    this.http.put('http://'+ip+':3000/devices/'+id, {channel: 3, value: 0}).subscribe((result) => { console.log(result); }); 
   }
 
   addMh() : void {
@@ -81,46 +82,46 @@ export class Tab2Page {
       mh: mh,
       other: "tester",
     }
-   this.http.patch('http://localhost:3000/movingHeads', data).subscribe((result) => { console.log(result); });   
+   this.http.patch('http://'+ip+':3000/movingHeads', data).subscribe((result) => { console.log(result); });   
   }
 
   removeMh() : void {
     let id = '6671f55d22a148bffcd84547';
-    this.http.delete('http://localhost:3000/movingHeads'+'/'+id).subscribe((result) => { console.log(result); });   
+    this.http.delete('http://'+ip+':3000/movingHeads'+'/'+id).subscribe((result) => { console.log(result); });   
   }
 
   updateMh() : void {
     let id = '6671f55d22a148bffcd84547';
     const device = { address: 196, blabla: "12342", type: -1, channels: [{type: 1, defaultValue: 100}, {type: 2, defaultValue: 50}, {blabla: "asdfasdf"}, {}]}
     const mh = {_id: id, xOff: -40, yOff: -7, bla: 4, heightOff: 50, panOff: 1, tiltOff: 24, maxPan: 540, maxTilt: 240, home: {x: 27, y: 50, height: 10}, device: device};
-    this.http.put('http://localhost:3000/movingHeads', {mh: mh}).subscribe((result) => { console.log(result); });   
+    this.http.put('http://'+ip+':3000/movingHeads', {mh: mh}).subscribe((result) => { console.log(result); });   
   }
 
   getMh() : void {  
-  this.http.get('http://localhost:3000/movingHeads').subscribe((result) => { console.log(result); }); 
+  this.http.get('http://'+ip+':3000/movingHeads').subscribe((result) => { console.log(result); }); 
   }
 
   setChannelMh() : void {  
     let id = '6671f55d22a148bffcd84547';
-    this.http.put('http://localhost:3000/movingHeads/'+id, {channel: 3, value: 255}).subscribe((result) => { console.log(result); }); 
+    this.http.put('http://'+ip+':3000/movingHeads/'+id, {channel: 3, value: 255}).subscribe((result) => { console.log(result); }); 
   }
 
   getPositions() : void {  
-    this.http.get('http://localhost:3000/movingHeads/positions').subscribe((result) => { console.log(result); }); 
+    this.http.get('http://'+ip+':3000/movingHeads/positions').subscribe((result) => { console.log(result); }); 
   }
 
   setPosition() : void {  
     let id = '6671f55d22a148bffcd84547';
-    this.http.put('http://localhost:3000/movingHeads/position/'+id, {position: {x: 300, y: -200, height: 50, blabla: "asdfasdf"}}).subscribe((result) => { console.log(result); }); 
+    this.http.put('http://'+ip+':3000/movingHeads/position/'+id, {position: {x: 300, y: -200, height: 50, blabla: "asdfasdf"}}).subscribe((result) => { console.log(result); }); 
   }
 
   goHome() : void {
     let id = '6671f55d22a148bffcd84547';
-    this.http.get('http://localhost:3000/movingHeads/home/'+id).subscribe((result) => { console.log(result); }); 
+    this.http.get('http://'+ip+':3000/movingHeads/home/'+id).subscribe((result) => { console.log(result); }); 
   }  
 
   setHome() : void {
     let id = '6671f55d22a148bffcd84547';
-    this.http.put('http://localhost:3000/movingHeads/home/'+id, {position: {x: 20, y: -5, height: 10}}).subscribe((result) => { console.log(result); }); 
+    this.http.put('http://'+ip+':3000/movingHeads/home/'+id, {position: {x: 20, y: -5, height: 10}}).subscribe((result) => { console.log(result); }); 
   }  
 }

@@ -1,0 +1,68 @@
+
+
+<ion-header [translucent]="true">
+  <ion-toolbar>
+    <ion-title class="inline">
+      Configure
+    </ion-title>
+    <!-- <ion-button id="addDevice">add device</ion-button> -->
+  </ion-toolbar>
+
+</ion-header>
+
+<ion-fab slot="fixed" vertical="top" horizontal="end">
+  <ion-fab-button>
+    <ion-icon name="add"></ion-icon>
+    <ion-label>Device</ion-label>
+  </ion-fab-button>
+</ion-fab>
+
+<ion-menu side="end" content-id="main-content" menuId="sidemenu">
+  <ion-header>
+    <ion-toolbar>
+      <ion-title>Menu Content</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content class="ion-padding">
+    <ion-menu-toggle>
+      <ion-button>Click to close the menu</ion-button>
+    </ion-menu-toggle>
+  </ion-content>
+</ion-menu>
+
+
+<ion-content [fullscreen]="true" id="main-content">
+  <ion-grid>
+    <ion-row>
+      <ion-col>id</ion-col>
+      <ion-col>name</ion-col>
+      <ion-col>type</ion-col>
+      <ion-col>address</ion-col>
+      <ion-col>channels</ion-col>
+      <ion-col></ion-col>
+    </ion-row>
+    <ion-row *ngFor="let device of devices | async">
+      <ion-col>{{device.deviceId}}</ion-col>
+      <ion-col>{{device.name}}</ion-col>
+      <ion-col>{{device.type}}</ion-col>
+      <ion-col>{{device.address}}</ion-col>
+      <ion-col>{{device.channels.length*device.channelMultiplier}}</ion-col>
+      <ion-col>
+        <ion-button id="{{device.deviceId}}b" (click)="toggleSettings($event)">settings</ion-button>
+      </ion-col>
+      <div id={{device.deviceId}} class="settings">
+        <ion-button id="{{device.deviceId}}e">edit</ion-button>
+        <ion-button id="{{device.deviceId}}d" (click)="delete($event)">delete</ion-button>
+        <ion-button id="{{device.deviceId}}v">manual values</ion-button>
+      </div>
+    </ion-row>
+  </ion-grid>
+  
+  <ion-header collapse="condense">
+    <ion-toolbar>
+      <ion-title size="large">Configure</ion-title>
+    </ion-toolbar>
+  </ion-header>
+  <app-explore-container name="Configure page"></app-explore-container>
+
+</ion-content>
