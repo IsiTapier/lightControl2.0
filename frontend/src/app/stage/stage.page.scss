@@ -1,21 +1,6 @@
-ion-card {
-    position: absolute;
-  
-    left: 0;
-    right: 0;
-  
-    user-select: none;
-
-    flex: 1 1 auto;
-
-  }
-  
-ion-card.active {
-    box-shadow: var(--ion-color-warning) 0px 4px 16px;
-}
-
-#box {
-  height: calc(100% - 56px);
+ion-title {
+  display: inline-block;
+  margin-top: 9px;
 }
 
 .background {
@@ -27,9 +12,6 @@ ion-card.active {
 .mh {
   display: inline;
   position: absolute;
-  // background-color: white;
-  // margin-left: calc(50% - 28px);
-  // margin-top: calc(20% - 28px - 56px);
   ion-fab-button {
     width: 100%;
     height: 100%;
@@ -37,8 +19,62 @@ ion-card.active {
     ion-icon {
       width: 100%;
       height: 100%;
-      // width: 5em;
-      // height: 5em;
     }
+  }
+}
+
+.mh0 {
+  --background: violet;
+  --border-color: violet;
+  --border-style: solid;
+  --border-width: 3px;
+}
+
+.mh1 {
+  --background: dodgerblue;
+  --border-color: dodgerblue;
+  --border-style: solid;
+  --border-width: 3px;
+}
+
+.mh2 {
+  --background: turquoise;
+  --border-color: turquoise;
+  --border-style: solid;
+  --border-width: 3px;
+}
+
+.mh3 {
+  --background: limegreen;
+  --border-color: limegreen;
+  --border-style: solid;
+  --border-width: 3px;
+}
+
+.mh4 {
+  --background: yellow;
+  --border-color: yellow;
+  --border-style: solid;
+  --border-width: 3px;
+}
+
+.mh5 {
+  --background: orange;
+  --border-color: orange;
+  --border-style: solid;
+  --border-width: 3px;
+}
+
+.mh6 {
+  --background: red;
+  --border-color: red;
+  --border-style: solid;
+  --border-width: 3px;
+}
+
+.buttonActive {
+  --background: transparent;
+  div {
+    color: white;
   }
 }

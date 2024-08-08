@@ -9,5 +9,5 @@ export function getMovings() : Observable<any> {
 }*/
 
 
-// export const ip = 'localhost';
-export const ip = '192.168.1.1';
+export const ip = 'localhost';
+// export const ip = '192.168.1.1';
