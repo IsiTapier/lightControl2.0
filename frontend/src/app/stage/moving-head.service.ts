@@ -1,12 +1,12 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { BehaviorSubject, Observable, of, Subject, timeout } from "rxjs";
+import { Observable, Subject } from "rxjs";
 import { ip } from "../database";
 
 // TODO timings
 const mhUpdateCooldown = 100;
-const positionFetchInterval = 1000;
-const movingsFetchInterval = 10000;
+const positionFetchInterval = 100;
+const movingsFetchInterval = 1000;
 
 export interface Position {
   x: number;
@@ -147,6 +147,8 @@ export class MovingHeadService {
   }
 
   public getX(id: string): number {
+    // TODO function gets called way to often
+    // console.log(this.getPosition(id));
     return this.getPosition(id).x;
   }
 

@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, Directive, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
 import type { GestureDetail } from '@ionic/angular';
 import { GestureController, Platform } from '@ionic/angular';
 import { MovingHeadService } from './moving-head.service';
@@ -57,6 +57,8 @@ export class StagePage {
       
       // TODO proper execution when ready
       setTimeout(() => {
+        this.cdRef.detectChanges();
+
         // calculate scale
         this.getScale();
 
@@ -84,12 +86,12 @@ export class StagePage {
   // mh button drag listener
   private dragListener(element: Element) {
     console.log("Enable Draglistener for " +element.id);
-    
+
     // touch move
     element.addEventListener("touchmove", (e: any) => {
       if(!e.touches) return;
       if(this.activeMh !== element) this.activateMh(element);
-
+      
       // console.log('touchmove', e.touches ? e.touches[0].clientY : null, e);
       this.moveTo(element.id, e.touches[0].clientX, e.touches[0].clientY);
     }, true);
@@ -109,6 +111,8 @@ export class StagePage {
   private getScale() {
     let el = this.stage.nativeElement;
     let height = el.clientHeight;
+    // return when view not enabled
+    if(height === 0) return;
     this.width = el.clientWidth;
 
     let size = this.width;
@@ -162,7 +166,9 @@ export class StagePage {
     this.activateMh(element.parentElement.parentElement);
   }
   
+  // TODO function gets called very often
   public getDotSize() : number {
+    // console.log(this.scale*DOT_SCALE);
     return this.scale*DOT_SCALE;
   }
 
