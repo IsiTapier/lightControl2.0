@@ -91,8 +91,8 @@ export class StagePage {
 
     // touch move
     element.addEventListener("touchmove", (e: any) => {
-      if(!e.touches) return;
       if(this.activeMh !== element) this.activateMh(element);
+      if(!e.touches) return;
 
       // console.log('touchmove', e.touches ? e.touches[0].clientY : null, e);
       this.moveTo(element.id, e.touches[0].clientX, e.touches[0].clientY);
@@ -101,6 +101,8 @@ export class StagePage {
     // mouse move
     const gesture = this.gestureCtrl.create({
       el: element,
+      threshold: 0,
+      gesturePriority: 10,
       onStart: () => this.onStart(element),
       onMove: (detail) => this.onMove(element, detail),
       onEnd: () => this.onEnd(element),
@@ -126,6 +128,7 @@ export class StagePage {
   }
 
   private onStart(element : Element) {
+    console.log("test")
     this.cdRef.detectChanges();
     this.activateMh(element);
   }
