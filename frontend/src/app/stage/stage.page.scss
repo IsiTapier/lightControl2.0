@@ -3,10 +3,48 @@ ion-title {
   margin-top: 9px;
 }
 
+.sideMenu {
+  position: absolute;
+  width: 100px;
+  margin: 10px;
+  margin-left: calc(100% - 100px - 10px);
+  height: calc(100% - 20px);
+  z-index: 7;
+
+  ion-card-content {
+    height: 100%;
+    padding-inline-start: 8px;
+    padding-inline-end: 8px;
+    padding-top: 6.5px;
+    padding-bottom: 6.5px;
+    
+    ion-row {
+      height: 100%;
+      ion-col {
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        ngx-slider {
+          display: flex;
+          flex-grow: 2;
+        }
+        ion-button {
+          display: inline-flex;
+          --padding-start: 0.6em;
+          --padding-end: 0.6em;
+          flex-grow: 1;
+        }
+      }
+    }
+
+  }
+}
+
 .background {
   --background: none;
   background: white url('/assets/godisaal2.jpg') no-repeat top center fixed;
   background-size: contain;
+  height: calc(100% - 56px) ;
 }
 
 .mh {

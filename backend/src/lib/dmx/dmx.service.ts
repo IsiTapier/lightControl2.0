@@ -2,6 +2,8 @@ import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { DeviceService } from '../device/device.service';
 import { ModuleRef } from '@nestjs/core';
 
+const ip = '192.168.1.98';
+
 @Injectable()
 export class DMXService implements OnModuleInit {
     private static readonly logger = new Logger(DMXService.name);
@@ -32,7 +34,7 @@ export class DMXService implements OnModuleInit {
 
     public static setChannel(channel: number, value: number, update: boolean) {
         // this.logger.debug("channel: "+channel+" value: "+value+" update: "+update);
-        console.log("channel: "+channel+" value: "+value+" update: "+update);
+        // console.log("channel: "+channel+" value: "+value+" update: "+update);
         if(channel < 1 || channel > 512) return;
         if(value < 0 || value > 255) return;
         if(update) this.sender.setChannel(channel-1, value); // since addresses start by 1 while channels start by 0
@@ -51,7 +53,7 @@ export class DMXService implements OnModuleInit {
 
     private static rx() {
         this.receiver = this.dmxnet.newReceiver({
-            // ip: '192.168.178.118',
+            // ip: ip,
             subnet: 0, //Destination subnet, default 0
             universe: 0, //Destination universe, default 0
             net: 0, //Destination net, default 0
@@ -68,7 +70,7 @@ export class DMXService implements OnModuleInit {
 
     private static tx() {
         this.sender = this.dmxnet.newSender({
-            ip: '192.168.1.106', //IP to send to, default 255.255.255.255
+            ip: ip, //IP to send to, default 255.255.255.255
             subnet: 0, //Destination subnet, default 0
             universe: 1, //Destination universe, default 0
             net: 0, //Destination net, default 0

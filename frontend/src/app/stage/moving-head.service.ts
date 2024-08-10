@@ -114,6 +114,19 @@ export class MovingHeadService {
     }, mhUpdateCooldown);
   }
 
+  // get positions as Observable
+  public getMovings(): Observable<any> {
+    return this.movingsStream.asObservable();
+  }
+
+  public getPositions() {
+    return this.tempPositions;
+  }
+
+  public getPosition(id: string) : Position {
+    return this.tempPositions.get(id);
+  }
+
   public setPosition(id: string, x: number, y: number, height?: number) {
     let position: Position = { x: x, y: y, height: height };
     // console.log(position)
@@ -129,17 +142,13 @@ export class MovingHeadService {
     this.submitPosition(id, position, tempPosition);
   }
 
-  // get positions as Observable
-  public getMovings(): Observable<any> {
-    return this.movingsStream.asObservable();
+  public getHeight(id: string) : number {
+    if(!this.getPosition(id)) return 0;
+    return this.getPosition(id).height || 0;
   }
 
-  public getPositions() {
-    return this.tempPositions;
-  }
-
-  public getPosition(id: string) {
-    return this.tempPositions.get(id);
+  public setHeight(id: string, height: number) {
+    this.setPosition(id, this.tempPositions.get(id).x, this.tempPositions.get(id).y, height);
   }
 
   public getXY(id: string) {

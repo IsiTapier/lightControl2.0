@@ -26,6 +26,7 @@ const LOADING_TIMEOUT = 2;
 })
 export class StagePage {
   @ViewChild('stage', { read: ElementRef}) stage: ElementRef<HTMLIonContentElement>;
+  @ViewChild('header', { read: ElementRef}) header: ElementRef<HTMLIonHeaderElement>;
   
   scale : number;
   width : number;
@@ -37,7 +38,7 @@ export class StagePage {
 
   constructor(private el: ElementRef, private gestureCtrl: GestureController, private cdRef: ChangeDetectorRef, private platform: Platform, public mhService : MovingHeadService) {}
 
-  ngAfterViewInit() {    	
+  ngAfterViewInit() {  
     // listen to window resize
     this.platform.resize.subscribe(async () => {
       this.getScale();
@@ -78,7 +79,8 @@ export class StagePage {
   private clickListener() {
     this.stage.nativeElement.addEventListener('click', (e: any) => {
       if(!this.activeMh) return;
-      // console.log(e);
+      // console.log(e)
+      if(e.target.nodeName !== 'ION-CONTENT') return;
       this.moveTo(this.activeMh.id, e.clientX, e.clientY);
     })
   }
@@ -91,10 +93,10 @@ export class StagePage {
     element.addEventListener("touchmove", (e: any) => {
       if(!e.touches) return;
       if(this.activeMh !== element) this.activateMh(element);
-      
+
       // console.log('touchmove', e.touches ? e.touches[0].clientY : null, e);
       this.moveTo(element.id, e.touches[0].clientX, e.touches[0].clientY);
-    }, true);
+    }, false); // TODO or true?
 
     // mouse move
     const gesture = this.gestureCtrl.create({
@@ -140,7 +142,7 @@ export class StagePage {
 
   private moveTo(id : string, _x : number, _y : number) {
     let newX = (_x-(this.width-this.scale)/2)/this.scale*SAAL_WIDTH-SAAL_WIDTH/2;
-    let newY = -((_y-56)/this.scale*IMAGE_WIDTH-STAGE_OFFSET_IMAGE)/IMAGE_WIDTH*SAAL_WIDTH;
+    let newY = -((_y-this.header.nativeElement.offsetHeight)/this.scale*IMAGE_WIDTH-STAGE_OFFSET_IMAGE)/IMAGE_WIDTH*SAAL_WIDTH;
     
     this.mhService.setPosition(id, newX, newY);
   }

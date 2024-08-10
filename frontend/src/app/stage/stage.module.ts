@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { StagePage } from './stage.page';
 import { ExploreContainerComponentModule } from '../explore-container/explore-container.module';
-
+import { NgxSliderModule } from '@angular-slider/ngx-slider'
 import { StagePageRoutingModule } from './stage-routing.module';
 
 @NgModule({
@@ -13,7 +13,8 @@ import { StagePageRoutingModule } from './stage-routing.module';
     CommonModule,
     FormsModule,
     ExploreContainerComponentModule,
-    StagePageRoutingModule
+    StagePageRoutingModule,
+    NgxSliderModule
   ],
   declarations: [StagePage]
 })

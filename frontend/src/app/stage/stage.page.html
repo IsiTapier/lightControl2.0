@@ -1,4 +1,4 @@
-<ion-header>
+<ion-header #header>
   <ion-toolbar>
     <ion-row>
       <ion-col size="auto">
@@ -28,4 +28,35 @@
       <ng-template #non_active><ion-icon name="radio-button-off"></ion-icon></ng-template>
     </ion-fab-button>
   </ion-fab>
+
+  <ion-card class="sideMenu" *ngIf="activeMh">
+    <!-- <ion-card-header>
+      <ion-card-title>Card Title</ion-card-title>
+      <ion-card-subtitle>Card Subtitle</ion-card-subtitle>
+    </ion-card-header> -->
+  
+    <ion-card-content>
+      <ion-row>
+
+        <!--<ion-col>
+          <ngx-slider [(value)]="minValue"
+                [(highValue)]="maxValue"
+                [options]="options"
+                (userChangeStart)="onUserChangeStart($event)"
+                (userChange)="onUserChange($event)"
+                (userChangeEnd)="onUserChangeEnd($event)">
+          </ngx-slider>
+          <p>Zoom</p>
+        </ion-col> -->
+        <ion-col>
+          <ngx-slider [value]="mhService.getHeight(activeMh.id)" [options]="{floor: 0, ceil: 500, vertical: true}" (userChange)="mhService.setHeight(activeMh.id, $event.value)"></ngx-slider>
+          <p>Höhe (cm)</p>
+          <!-- <span> -->
+            <ion-button (click)="mhService.setHeight(activeMh.id, 0)">Boden</ion-button>
+            <ion-button (click)="mhService.setHeight(activeMh.id, 120)">1,2m</ion-button>
+          <!-- </span> -->
+        </ion-col>
+      </ion-row>
+    </ion-card-content>
+  </ion-card>
 </ion-content>

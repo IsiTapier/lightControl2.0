@@ -126,7 +126,7 @@ export class MovingHead extends DMXDevice {
         y-=this.yOff;
         // TODO check if use of TILT offset correct 
         // TODO check if float types are used
-        let alpha = Math.atan(Math.sqrt(Math.pow(y,2)+Math.pow(x,2))/(this.heightOff-height*2-((y>STAGE_Y-this.yOff&&Math.abs(x+this.xOff)<STAGE_X)?STAGE_HEIGHT:0))*1.)*180/Math.PI;
+        let alpha = Math.atan(Math.sqrt(Math.pow(y,2)+Math.pow(x,2))/(this.heightOff-height-((y>STAGE_Y-this.yOff&&Math.abs(x+this.xOff)<STAGE_X)?STAGE_HEIGHT:0))*1.)*180/Math.PI;
 
         // Eigentlich müsste es so sein:  TODO überprüfen
         // let offset = this.tiltOff - (this.maxTilt-180)/2./this.maxTilt*255
