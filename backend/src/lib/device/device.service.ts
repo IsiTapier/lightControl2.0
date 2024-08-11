@@ -150,7 +150,8 @@ export class DeviceService {
 
   public update() : void {
     let hasChanged = false;
-    for(let device of this.devices) hasChanged ||= device.update();
+    for(let device of this.devices)
+      hasChanged = device.update() || hasChanged;
     if(hasChanged) DMXService.update();
   }
 }
