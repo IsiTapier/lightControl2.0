@@ -12,8 +12,11 @@
         </ion-button>
       </ion-col>
       <ion-col size="auto">
-        <ion-button (click)="setHome(activeMh)">
-          {{ activeMh ? "set Home" : "Home" }}
+        <ion-button (click)="setHome()" *ngIf="activeMh">
+          set Home
+        </ion-button>
+        <ion-button (click)="home()">
+          Home
         </ion-button>
       </ion-col>
     </ion-row>

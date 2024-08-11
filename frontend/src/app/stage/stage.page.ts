@@ -96,7 +96,7 @@ export class StagePage {
 
       // console.log('touchmove', e.touches ? e.touches[0].clientY : null, e);
       this.moveTo(element.id, e.touches[0].clientX, e.touches[0].clientY);
-    }, false); // TODO or true?
+    }, true);
 
     // mouse move
     const gesture = this.gestureCtrl.create({
@@ -194,9 +194,13 @@ export class StagePage {
     return marginTop;
   }
 
-  // set home and drive to home
-  public setHome(save : boolean) {
-    if(save)  this.mhService.setHome(this.activeMh.id);
-    else      this.mhService.home();
+  // set home
+  public setHome() {
+    this.mhService.setHome(this.activeMh.id);
+  }
+
+  // drive to home
+  public home() {
+    this.mhService.home();
   }
 }
