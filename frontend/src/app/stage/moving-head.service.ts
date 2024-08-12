@@ -36,7 +36,7 @@ export class MovingHeadService {
 
     setInterval(() => {
       this.http.get('http://' + ip + ':3000/movingHeads').subscribe((data) => {
-        data = this.sort(data);
+        data = this.sort(data)
         if(JSON.stringify(data) === JSON.stringify(this.movingHeads)) return;
         this.movingHeads = data;
         this.movingsStream.next(this.movingHeads);
@@ -51,8 +51,8 @@ export class MovingHeadService {
       if (a.name < b.name)  return -1;
       if (a.name > b.name)  return  1;
                             return  0;
-                              // TODO null all properties, which shouldn't cause rerender
-    }).map((mh : any) => ({...mh, x: 0, y: 0, height: 0, values: [] }));
+                              // TODO null all properties, which shouldn't cause rerender (Depends on what to show in settings)
+    }).map((mh : any) => ({...mh, x: 0, y: 0, height: 0, values: [], home: {}}));
   }
 
   // fetch every 100ms

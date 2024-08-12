@@ -52,9 +52,8 @@ export class StagePage {
 
     // enable drag/move Listener when new mhs are added
     this.mhService.getMovings().subscribe(async (mhs) => {
-      if(mhs.length === this.lastMhsAmount) return;
-      this.lastMhsAmount = mhs.length;
-      console.log("Moving Head Amount changed to: "+mhs.length);
+      let mhsAmount = mhs.length;
+      console.log("Moving Head Amount changed to: "+mhsAmount);
       
       // TODO proper execution when ready
       setTimeout(() => {
@@ -64,7 +63,7 @@ export class StagePage {
         this.getScale();
 
         let movings = this.stage.nativeElement.children;
-        if(movings.length !== this.lastMhsAmount) console.log("ERROR: Found unexpected amount of MH Icons!");
+        if(movings.length !== mhsAmount) console.log("ERROR: Found unexpected amount of MH Icons!");
 
         // add drag/move listener to every mh
         for(let i = 0; i < movings.length; i++) {
