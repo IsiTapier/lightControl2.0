@@ -12,11 +12,16 @@
         </ion-button>
       </ion-col>
       <ion-col size="auto">
-        <ion-button (click)="setHome()" *ngIf="activeMh">
+        <ion-button (click)="setHome()" *ngIf="activeMh&&showMenu">
           set Home
         </ion-button>
-        <ion-button (click)="home()">
+        <ion-button (click)="home()" *ngIf="showMenu">
           Home
+        </ion-button>
+        <ion-button (click)="showMenu=!showMenu">
+          <div *ngIf="showMenu;then active else non_active" ></div>
+          <ng-template #active><ion-icon slot="icon-only"name="arrow-down"></ion-icon></ng-template>
+          <ng-template #non_active><ion-icon slot="icon-only" name="menu"></ion-icon></ng-template>
         </ion-button>
       </ion-col>
     </ion-row>
@@ -32,12 +37,7 @@
     </ion-fab-button>
   </ion-fab>
 
-  <ion-card class="sideMenu" *ngIf="activeMh">
-    <!-- <ion-card-header>
-      <ion-card-title>Card Title</ion-card-title>
-      <ion-card-subtitle>Card Subtitle</ion-card-subtitle>
-    </ion-card-header> -->
-  
+  <ion-card class="sideMenu" *ngIf="activeMh&&showMenu">  
     <ion-card-content>
       <ion-row>
 

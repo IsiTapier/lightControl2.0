@@ -28,13 +28,15 @@ export class StagePage {
   @ViewChild('stage', { read: ElementRef}) stage: ElementRef<HTMLIonContentElement>;
   @ViewChild('header', { read: ElementRef}) header: ElementRef<HTMLIonHeaderElement>;
   
-  scale : number;
-  width : number;
+  private scale : number;
+  private width : number;
 
-  activeMh : any;
+  public activeMh : any;
+  public showMenu = false;
 
   public mhs : any;
   private lastMhsAmount : number = 0;
+
 
   constructor(private el: ElementRef, private gestureCtrl: GestureController, private cdRef: ChangeDetectorRef, private platform: Platform, public mhService : MovingHeadService) {}
 
