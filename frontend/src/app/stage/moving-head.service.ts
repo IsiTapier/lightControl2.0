@@ -1,12 +1,14 @@
 import { HttpClient } from "@angular/common/http";
 import { Injectable } from "@angular/core";
-import { Observable, Subject } from "rxjs";
-import { ip } from "../database";
+import { catchError, Observable, Subject } from "rxjs";
+import { handleError, ip } from "../database";
 
 // TODO timings
 const mhUpdateCooldown = 100;
 const positionFetchInterval = 100;
 const movingsFetchInterval = 1000;
+
+var requestFailed = false;
 
 export interface Position {
   x: number;
@@ -32,10 +34,10 @@ export class MovingHeadService {
 
   // fetch mhs every 10s
   private async fetchMovings() {
-    await this.http.get('http://' + ip + ':3000/movingHeads').subscribe((data) => this.movingHeads = this.sort(data));
+    await this.http.get('http://' + ip + ':3000/movingHeads').pipe(catchError(handleError)).subscribe((data) => this.movingHeads = this.sort(data));
 
     setInterval(() => {
-      this.http.get('http://' + ip + ':3000/movingHeads').subscribe((data) => {
+      this.http.get('http://' + ip + ':3000/movingHeads').pipe(catchError(handleError)).subscribe((data) => {
         data = this.sort(data)
         if(JSON.stringify(data) === JSON.stringify(this.movingHeads)) return;
         this.movingHeads = data;
@@ -58,11 +60,11 @@ export class MovingHeadService {
   // fetch every 100ms
   // TODO cache serverside and don't assamble data every time!!
   private fetchPositions() {
-    this.http.get('http://' + ip + ':3000/movingHeads/positions').subscribe(this.mergePositions.bind(this));
+    this.http.get('http://' + ip + ':3000/movingHeads/positions').pipe(catchError(handleError)).subscribe(this.mergePositions.bind(this));
 
     // TODO fetch only when change occured (changed ID)
     setInterval(() => {
-      this.http.get('http://' + ip + ':3000/movingHeads/positions').subscribe(this.mergePositions.bind(this));
+      this.http.get('http://' + ip + ':3000/movingHeads/positions').pipe(catchError(handleError)).subscribe(this.mergePositions.bind(this));
     }, positionFetchInterval);
   }
 
@@ -95,7 +97,7 @@ export class MovingHeadService {
     this.cooldownMHs.push(id);
 
     // update DB
-    this.http.put('http://' + ip + ':3000/movingHeads/position/' + id, { position: position }, { responseType: 'text' }).subscribe(() => { this.submitedPositions.set(id, tempPositon) });
+    this.http.put('http://' + ip + ':3000/movingHeads/position/' + id, { position: position }, { responseType: 'text' }).pipe(catchError(handleError)).subscribe(() => { this.submitedPositions.set(id, tempPositon) });
     
     // // set height if undefined for later change comparison
     // if (position.height === undefined) position.height = this.tempPositions.get(id).height;
@@ -166,12 +168,12 @@ export class MovingHeadService {
   }
 
   public setHome(id: string) {
-    this.http.put('http://' + ip + ':3000/movingHeads/home/' + id, { position: this.getPosition(id) }, { responseType: 'text' }).subscribe();
+    this.http.put('http://' + ip + ':3000/movingHeads/home/' + id, { position: this.getPosition(id) }, { responseType: 'text' }).pipe(catchError(handleError)).subscribe();
   }
 
   public home() {
     for(let mh of this.movingHeads) {
-      this.http.get('http://' + ip + ':3000/movingHeads/home/' + mh.mhId, { responseType: 'text' }).subscribe();
+      this.http.get('http://' + ip + ':3000/movingHeads/home/' + mh.mhId, { responseType: 'text' }).pipe(catchError(handleError)).subscribe();
     } 
   }
 }
