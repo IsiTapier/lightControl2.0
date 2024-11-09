@@ -1,6 +1,5 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
-import { ip } from '../database';
 import { PresetService } from './preset.service';
 import { MovingHeadService } from '../stage/moving-head.service';
 
@@ -23,6 +22,7 @@ export class PresetsPage {
   public selectedPresetId : string;
   public selectedPositions : any;
   public presetName : string;
+  public oldName : string;
   private previousPositions : any;
   
   constructor(private http: HttpClient, public presetService: PresetService, public mhService: MovingHeadService) {}
@@ -64,12 +64,13 @@ export class PresetsPage {
     this.selectedPresetId = presetId;
     this.selectedPositions = positions;
     this.presetName = preset.name;
+    this.oldName = preset.name;
   }
 
   private highlight(presetId : string) {
     let element = this.getPresetById(presetId);
     element.classList.add('highlight');
-    setTimeout(() => element.classList.remove('highlight'), 400);
+    setTimeout(() => element.classList.remove('highlight'), 300);
   }
 
   public onInput(ev : any) {
@@ -86,11 +87,17 @@ export class PresetsPage {
     this.selectedPresetId = '';
     this.selectedPositions = undefined;
     this.presetName = '';
+    this.oldName = '';
     // if previous positon saved, activate it
     if(this.previousPositions) {
       this.mhService.loadPositions(this.previousPositions, true)
       this.previousPositions = null;
     }
+  }
+
+  public hasChanged() : boolean {
+    // TODO gets called too often (constantly)
+    return this.presetName !== this.oldName || JSON.stringify(Array.from(this.selectedPositions)) !== JSON.stringify(Array.from(this.mhService.getPresetPositions()));
   }
 
   public submit() {
@@ -103,8 +110,10 @@ export class PresetsPage {
     // send http request
     if(this.mode === PresetMode.ADD)
       this.presetService.addPreset(preset);
-    else if(this.mode === PresetMode.EDIT)
-      this.presetService.updatePreset(preset);
+    else if(this.mode === PresetMode.EDIT) {
+      if(this.hasChanged()) this.presetService.updatePreset(preset);
+      else console.log("ERROR: Preset is equal to old one");
+    }
 
     this.reset();
   }

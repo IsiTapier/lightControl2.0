@@ -7,7 +7,7 @@
       </ion-col>
       <ion-col size="auto">
         <ion-button (click)="reset()" color="medium">{{mode==='PREVIEW'?'zurück':'abbrechen'}}</ion-button>
-        <ion-button (click)="submit()" *ngIf="mode!=='PREVIEW' && presetName !=='' && mhService.getEnabledMovingHeads().length > 0" color="warning">speichern</ion-button>
+        <ion-button (click)="submit()" *ngIf="mode!=='PREVIEW' && presetName !=='' && mhService.getEnabledMovingHeads().length > 0 && (mode!=='EDIT' || hasChanged())"  color="warning">speichern</ion-button>
       </ion-col>
     </app-stage>
   </ion-content> 

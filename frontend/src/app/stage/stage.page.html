@@ -52,11 +52,11 @@
           <p>Zoom</p>
         </ion-col> -->
         <ion-col>
-          <ngx-slider [value]="mhService.getHeight(activeMh.id)" [options]="{floor: 0, ceil: 500, vertical: true}" (userChange)="mhService.setHeight(activeMh.id, $event.value)"></ngx-slider>
+          <ngx-slider [value]="mhService.getHeight(activeMh.id)" [options]="{floor: 0, ceil: 500, vertical: true, disabled: isPreset&&!isLive}" (userChange)="mhService.setHeight(activeMh.id, $event.value)"></ngx-slider>
           <p>Höhe (cm)</p>
           <!-- <span> -->
-            <ion-button (click)="mhService.setHeight(activeMh.id, 0)">Boden</ion-button>
-            <ion-button (click)="mhService.setHeight(activeMh.id, 120)">1,2m</ion-button>
+            <ion-button (click)="mhService.setHeight(activeMh.id, 0)" [disabled]="isPreset&&!isLive">Boden</ion-button>
+            <ion-button (click)="mhService.setHeight(activeMh.id, 120)" [disabled]="isPreset&&!isLive">1,2m</ion-button>
           <!-- </span> -->
         </ion-col>
       </ion-row>

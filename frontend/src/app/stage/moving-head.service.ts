@@ -120,9 +120,9 @@ export class MovingHeadService {
       this.cooldownMHs = this.cooldownMHs.filter((id) => id !== id);
       // if change has occured -> resubmit
       if (JSON.stringify(this.tempPositions.get(id)) !== JSON.stringify(position)) {
-        // BAD: overides height, even if not updated
+        // TODO BAD: overides height, even if not updated
         this.submitPosition(id, this.tempPositions.get(id), this.tempPositions.get(id));
-        console.log("resubmit");
+        // console.log("resubmit");
       }
       // console.log("reseted " + id)
     }, mhUpdateCooldown);

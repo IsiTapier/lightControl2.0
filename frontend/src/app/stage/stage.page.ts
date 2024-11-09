@@ -192,7 +192,7 @@ export class StagePage {
       // TODO only update if MH is disabled
       if(this.isPreset && this.isLive) this.mhService.disableMovingHead(this.activeMh.id, false);
     }
-    console.log("activated mh "+element.id)
+    // console.log("activated mh "+element.id)
   }
 
   public getMhById(id : string) {
