@@ -67,7 +67,7 @@ export class MovingHeadDto {        // TODO force pan tilt channel
     @ValidateIf((obj, value) => !value || value.x || value.y || value.height)
     @ValidateNested({ message: 'Please Enter Valid Home Position'})
     @Prop({ type: Position })
-    home : Position 
+    home : Position;
 
     @Transform(({obj, value}) => {value.type = 0; value._id = obj._id; return value;})  // TODO Pfusch richtig machen (mit IDs) !!!
     @IsValidMhDevice({ message: 'Please Enter valid MovingHead Device with at least a Pan and Tilt Channel'})

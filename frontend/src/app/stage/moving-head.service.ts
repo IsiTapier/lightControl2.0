@@ -8,8 +8,6 @@ const mhUpdateCooldown = 100;
 const positionFetchInterval = 100;
 const movingsFetchInterval = 1000;
 
-var requestFailed = false;
-
 export interface Position {
   x: number;
   y: number;
@@ -28,17 +26,22 @@ export class MovingHeadService {
 
   private movingsStream = new Subject()
 
+  // for preset preview mode (not live)
+  private blockUpdates : boolean = false;
+  // for preset mh disabeling
+  private disabledMovingHeads: Array<string> = new Array<string>();
+
   constructor(private http: HttpClient) {
     this.fetchMovings();
   }
 
   // fetch mhs every 10s
   private async fetchMovings() {
-    await this.http.get('http://' + ip + ':3000/movingHeads').pipe(catchError(handleError)).subscribe((data) => this.movingHeads = this.sort(data));
+    await this.http.get('http://' + ip + ':3000/movingHeads').pipe(catchError(handleError)).subscribe((data) => this.movingHeads = this.sort(data)) // don't update yet, wait for positions
 
     setInterval(() => {
       this.http.get('http://' + ip + ':3000/movingHeads').pipe(catchError(handleError)).subscribe((data) => {
-        data = this.sort(data)
+        data = this.sort(data);
         if(JSON.stringify(data) === JSON.stringify(this.movingHeads)) return;
         this.movingHeads = data;
         this.movingsStream.next(this.movingHeads);
@@ -48,7 +51,7 @@ export class MovingHeadService {
     this.fetchPositions();
   }
 
-  sort(mhs : any) : any {
+  private sort(mhs : any) : any {
     return mhs.sort(function (a : any, b : any) {
       if (a.name < b.name)  return -1;
       if (a.name > b.name)  return  1;
@@ -60,18 +63,25 @@ export class MovingHeadService {
   // fetch every 100ms
   // TODO cache serverside and don't assamble data every time!!
   private fetchPositions() {
-    this.http.get('http://' + ip + ':3000/movingHeads/positions').pipe(catchError(handleError)).subscribe(this.mergePositions.bind(this));
-
+    // update Movings Heads once first positions received
+    this.http.get('http://' + ip + ':3000/movingHeads/positions').pipe(catchError(handleError)).subscribe((data) => {
+      this.mergePositions(data);
+      this.movingsStream.next(this.movingHeads);
+    });    
+    
     // TODO fetch only when change occured (changed ID)
     setInterval(() => {
       this.http.get('http://' + ip + ':3000/movingHeads/positions').pipe(catchError(handleError)).subscribe(this.mergePositions.bind(this));
     }, positionFetchInterval);
   }
 
-  private mergePositions(data: any) {
+  private mergePositions(data: any): boolean {
     let changes: boolean = false;
 
     data.forEach(({ id, position }: { id: string, position: Position }) => {
+      // for preset preview mode
+      if(this.blockUpdates && !this.isDisabled(id)) return;
+
       // if change has occured -> return
       // TODO check if further update neccessary (refetch)
       if (this.tempPositions.get(id) !== this.submitedPositions.get(id)) return;
@@ -86,8 +96,10 @@ export class MovingHeadService {
       changes = true;
     });
 
+    return changes;
+
     // if changes occured, update display by Observable
-    if (changes) this.movingsStream.next(this.movingHeads);
+    // if (changes) this.movingsStream.next(this.movingHeads);
   }
 
   // submit position updates
@@ -121,15 +133,23 @@ export class MovingHeadService {
     return this.movingsStream.asObservable();
   }
 
+  public forceUpdate() : void {
+    if(this.movingHeads)
+      this.movingsStream.next(this.movingHeads);
+  }
+
   public getPositions() {
     return this.tempPositions;
   }
 
   public getPosition(id: string) : Position {
-    return this.tempPositions.get(id);
+    return this.tempPositions.get(id) || {x: 0, y: 0, height: 0};
   }
 
-  public setPosition(id: string, x: number, y: number, height?: number) {
+  public setPosition(id: string, x: number, y: number, height?: number, update: boolean = true) {
+    // for preset preview
+    if(this.blockUpdates && update) return;
+
     let position: Position = { x: x, y: y, height: height };
     // console.log(position)
 
@@ -141,7 +161,7 @@ export class MovingHeadService {
     // update position in temp data
     this.tempPositions.set(id, tempPosition);
   	
-    this.submitPosition(id, position, tempPosition);
+    if(update) this.submitPosition(id, position, tempPosition);
   }
 
   public getHeight(id: string) : number {
@@ -175,5 +195,54 @@ export class MovingHeadService {
     for(let mh of this.movingHeads) {
       this.http.get('http://' + ip + ':3000/movingHeads/home/' + mh.mhId, { responseType: 'text' }).pipe(catchError(handleError)).subscribe();
     } 
+  }
+
+  // for preset preview mode:
+  public disableUpdates(block: boolean) {
+    if(this.blockUpdates && !block) {
+      // reset positions
+      // console.log("reset data")
+      this.tempPositions = new Map<string, Position>();
+      this.submitedPositions = new Map<string, Position>();
+    }
+    this.blockUpdates = block;
+  }
+
+  public loadPositions(positions : Map<string, Position>, update = true) {
+    if(!positions) return;
+
+    for(let [mhId, position] of positions) {
+      this.setPosition(mhId, position.x, position.y, position.height, update)
+    }
+  }
+
+  // for disabeling moving heads in presets
+  public disableMovingHeads(positions: Map<string, Position>) {
+    if(!positions) return;
+    this.movingHeads.forEach((mh: any) => this.disableMovingHead(mh.mhId, !positions.has(mh.mhId)));
+  }
+
+  public disableMovingHead(mhId : string, disable : boolean) {
+    if(disable && !this.disabledMovingHeads.includes(mhId)) this.disabledMovingHeads.push(mhId);
+    else if(!disable && this.disabledMovingHeads.includes(mhId)) this.disabledMovingHeads = this.disabledMovingHeads.filter((id) => id !== mhId);
+  }
+  
+  public enableAll() {
+    this.disabledMovingHeads = [];
+  }
+
+  public isDisabled(mhId : string) : boolean {
+    return this.disabledMovingHeads.includes(mhId)
+  }
+
+  public getEnabledMovingHeads() : Array<any> {
+    return this.movingHeads.filter((mh:any) => !this.disabledMovingHeads.includes(mh.mhId));
+  }
+
+  public getPresetPositions() : Map<string, Position> {
+    let positions = new Map<string, Position>();
+    for(let mh of this.getEnabledMovingHeads())
+      positions.set(mh.mhId, this.getPosition(mh.mhId));
+    return positions;
   }
 }

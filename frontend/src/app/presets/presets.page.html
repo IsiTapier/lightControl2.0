@@ -1,85 +1,136 @@
-<ion-header [translucent]="true">
+<!-- Stage View for Presets -->
+<ng-container  *ngIf="mode==='ADD' || ((mode==='EDIT' || mode==='PREVIEW') && selectedPresetId)">
+  <ion-content [fullscreen]="true">
+    <app-stage [isPreset]=true [isLive]="mode!=='PREVIEW'" [positions]="selectedPositions">
+      <ion-col size="auto">
+        <ion-input (ionInput)="onInput($event)" id="nameInput" [label]='mode=="PREVIEW"?"Vorschau: ":"Name:"' [value]='presetName' [clearOnEdit]='mode!=="EDIT"?true:false' color="primary" autofocus="true" required=true disabled="{{mode==='PREVIEW'}}"></ion-input>
+      </ion-col>
+      <ion-col size="auto">
+        <ion-button (click)="reset()" color="medium">{{mode==='PREVIEW'?'zurück':'abbrechen'}}</ion-button>
+        <ion-button (click)="submit()" *ngIf="mode!=='PREVIEW' && presetName !=='' && mhService.getEnabledMovingHeads().length > 0" color="warning">speichern</ion-button>
+      </ion-col>
+    </app-stage>
+  </ion-content> 
+</ng-container>
+
+<!-- Header -->
+<ion-header [translucent]="true" *ngIf="mode==='PRESETS' || mode==='DELETE' || (mode!=='ADD' && !selectedPresetId)">
   <ion-toolbar>
-    <ion-title>
-      Presets
-    </ion-title>
+    <ion-row>
+      <ion-col size="auto">
+        <ion-title>
+          Presets
+        </ion-title>
+      </ion-col>
+      <ion-col></ion-col>
+      <ion-col size="auto">
+        <ion-button (click)="toggleMode('ADD')" color="primary">add</ion-button>
+        <ion-button (click)="toggleMode('DELETE')" [color]='mode==="DELETE"?"danger":"primary"'>delete</ion-button>
+        <ion-button (click)="toggleMode('EDIT')" [color]='mode==="EDIT"?"warning":"primary"'>edit</ion-button>
+        <ion-button (click)="toggleMode('PREVIEW')" [color]='mode==="PREVIEW"?"success":"primary"'>preview</ion-button>
+      </ion-col>
+    </ion-row>
   </ion-toolbar>
 </ion-header>
 
-<ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Presets</ion-title>
-    </ion-toolbar>
-  </ion-header>
+<!-- delte confirm -->
+<app-confirm *ngIf='mode==="DELETE" && selectedPresetId' [text]='"Willst du wirklich das Preset ["+presetName+"] löschen?"' [onConfirm]='delete.bind(this)' [onBack]='reset.bind(this)'></app-confirm>
+<!-- preset selection -->
+<ion-content *ngIf="mode==='PRESETS' || (mode!=='ADD' && !selectedPresetId)">
+  <div>    
+      <!-- <ion-button (click)="red()"> 
+        redd
+      </ion-button>
+    
+      <ion-button (click)="green()">
+        green
+      </ion-button>
+    
+      <ion-button (click)="blue()">
+        blue
+      </ion-button>
+    
+      <ion-button (click)="add()">
+        add
+      </ion-button>
+    
+      <ion-button (click)="remove()">
+        remove
+      </ion-button>
+    
+      <ion-button (click)="update()">
+        update
+      </ion-button>
+    
+      <ion-button (click)="get()">
+        get
+      </ion-button>
+    
+      <ion-button (click)="setChannel()">
+        setchannel
+      </ion-button>
+    
+      <ion-button (click)="addMh()">
+        add mh
+      </ion-button>
+    
+      <ion-button (click)="removeMh()">
+        remove mh
+      </ion-button>
+    
+      <ion-button (click)="updateMh()">
+        update mh
+      </ion-button>
+    
+      <ion-button (click)="getMh()">
+        get mh
+      </ion-button>
+    
+      <ion-button (click)="setChannelMh()">
+        setchannel mh
+      </ion-button>
+    
+      <ion-button (click)="getPositions()">
+        getPositions mh
+      </ion-button>
+    
+      <ion-button (click)="setPosition()">
+        setPosition mh
+      </ion-button>
+    
+      <ion-button (click)="goHome()">
+        goHome mh
+      </ion-button>
+    
+      <ion-button (click)="setHome()">
+        setHome mh
+      </ion-button>
+    
+      <ion-button (click)="addsPreset()">
+        add preset
+      </ion-button>
+    
+      <ion-button (click)="removesPreset()">
+        remove preset
+      </ion-button>
+    
+      <ion-button (click)="updatesPreset()">
+        update preset
+      </ion-button>
+    
+      <ion-button (click)="getsPreset()">
+        get preset
+      </ion-button>
+    
+      <ion-button (click)="activatesPreset()">
+        activate preset
+      </ion-button>-->
+    
+      <ion-col >
+        <ion-button *ngFor="let preset of presets; let i = index" (click)="clickPreset(preset.presetId)" class="{{'preset'+i%7}}" >
+          <div>{{preset.name}}</div>
+        </ion-button>
+      </ion-col>
+  </div>
 
-  <ion-button (click)="red()">
-    redd
-  </ion-button>
-
-  <ion-button (click)="green()">
-    green
-  </ion-button>
-
-  <ion-button (click)="blue()">
-    blue
-  </ion-button>
-
-  <ion-button (click)="add()">
-    add
-  </ion-button>
-
-  <ion-button (click)="remove()">
-    remove
-  </ion-button>
-
-  <ion-button (click)="update()">
-    update
-  </ion-button>
-
-  <ion-button (click)="get()">
-    get
-  </ion-button>
-
-  <ion-button (click)="setChannel()">
-    setchannel
-  </ion-button>
-
-  <ion-button (click)="addMh()">
-    add mh
-  </ion-button>
-
-  <ion-button (click)="removeMh()">
-    remove mh
-  </ion-button>
-
-  <ion-button (click)="updateMh()">
-    update mh
-  </ion-button>
-
-  <ion-button (click)="getMh()">
-    get mh
-  </ion-button>
-
-  <ion-button (click)="setChannelMh()">
-    setchannel mh
-  </ion-button>
-
-  <ion-button (click)="getPositions()">
-    getPositions mh
-  </ion-button>
-
-  <ion-button (click)="setPosition()">
-    setPosition mh
-  </ion-button>
-
-  <ion-button (click)="goHome()">
-    goHome mh
-  </ion-button>
-
-  <ion-button (click)="setHome()">
-    setHome mh
-  </ion-button>
-
-  <app-explore-container name="Presets page"></app-explore-container>
 </ion-content>

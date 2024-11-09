@@ -6,6 +6,8 @@ import { PresetsPage } from './presets.page';
 import { ExploreContainerComponentModule } from '../explore-container/explore-container.module';
 
 import { PresetsPageRoutingModule } from './presets-routing.module';
+import { StagePageModule } from '../stage/stage.module';
+import { ConfirmModule } from '../util/confirm/confirm.module';
 
 @NgModule({
   imports: [
@@ -13,7 +15,9 @@ import { PresetsPageRoutingModule } from './presets-routing.module';
     CommonModule,
     FormsModule,
     ExploreContainerComponentModule,
-    PresetsPageRoutingModule
+    PresetsPageRoutingModule,
+    StagePageModule,
+    ConfirmModule
   ],
   declarations: [PresetsPage]
 })

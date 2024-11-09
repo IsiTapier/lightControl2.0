@@ -13,18 +13,19 @@ import { Position } from './classes/position';
 export class MovingHeadService {
   private readonly logger = new Logger(MovingHeadService.name);
   private movingHeads : MovingHead[] = [];
+  private loaded : Promise<void>;
 
   constructor(
     @Inject(forwardRef(() => DeviceService)) private readonly deviceService : DeviceService,
     @InjectModel("movingHeads") private readonly movingHeadModel: Model<MovingHeadDto>,
   ) {
-    this.loadDB();
+    this.loaded = this.loadDB();
   }
 
   private addDB(createMovingHeadDto: MovingHeadDto) {
     const createdMovingHead = new this.movingHeadModel(createMovingHeadDto);
 
-    this.logger.log('New moving head: '+createdMovingHead._id);
+    this.logger.log('New moving head: '+createdMovingHead._id+' added to DB');
     return createdMovingHead.save();  // TODO debug if successfull
   }
   
@@ -57,7 +58,9 @@ export class MovingHeadService {
 
   private async loadDB() : Promise<void> {
     let dbMovingHeads = await this.getDB();
-    for(let mh of dbMovingHeads) this.logger.debug(await this.addMovingHead(mh, false)); // TODO Debug if addDevice throws ERROR
+    await this.deviceService.isLoaded();
+
+    for(let mh of dbMovingHeads) this.logger.debug(this.addMovingHead(mh, false)); // TODO Debug if addDevice throws ERROR
 
     this.logger.log(this.movingHeads.length+ " Moving Heads loaded from DB");
 
@@ -79,8 +82,12 @@ export class MovingHeadService {
     return -1;
   }
 
+  public isLoaded() : Promise<void> {
+    return this.loaded;
+  }
+
   public isValidMhId(mhId: string) : boolean {
-      return this.getMhIterator(mhId) !== -1
+    return this.getMhIterator(mhId) !== -1
   }
 
   public getMovingHeads() : MovingHead[] {
@@ -104,15 +111,13 @@ export class MovingHeadService {
     let result = this.deviceService.addDevice(movingHeadDto.device, addDB);
     if(!result) return "ERROR: Device not valid"; // TODO test
 
-    this.logger.debug("add moving head: "+mh);
-
     if(addDB) this.addDB(movingHeadDto); // TODO Test
 
     this.movingHeads.push(mh);
     mh.initMh(); 
 
-    this.logger.log("successful added moving head");
-    return "STATUS: successful added moving head";
+    if(addDB) this.logger.log('successful added "'+movingHeadDto.device.name+'" on channel '+mh.getStartAddress()+' to '+mh.getEndAddress());
+    return 'STATUS: successful added "'+movingHeadDto.device.name+'" on channel '+mh.getStartAddress()+' to '+mh.getEndAddress();
   }
 
   public removeMovingHead(mhId : string) : string | void {
@@ -160,7 +165,7 @@ export class MovingHeadService {
     if(hasChanged) DMXService.update();
   }
 
-  public getPositions()  {
+  public getPositions() : Position[] {
     let positions = [];
 
     for(let mh of this.movingHeads)

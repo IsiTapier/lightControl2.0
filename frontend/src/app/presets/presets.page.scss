@@ -1,0 +1,27 @@
+ion-title {
+    display: inline-block;
+    margin-top: 9px;
+}
+
+#nameInput {
+    display: inline;
+    width: 500px;
+}
+
+ion-button {
+    padding-right: 2px;
+}
+
+ion-content {
+    div {
+        margin: 5px;
+        
+        ion-button {
+            padding: 2px;
+        }
+    }
+}
+
+app-confirm {
+    height: 100%;
+}

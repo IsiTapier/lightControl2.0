@@ -14,18 +14,19 @@ import { ChannelType } from './types/channelType';
 export class DeviceService {
   private readonly logger = new Logger(DeviceService.name);
   private devices : DMXDevice[] = [];
+  private loaded : Promise<void>;
 
   constructor(
     @Inject(forwardRef(() => MovingHeadService)) private readonly movingHeadService : MovingHeadService,
     @InjectModel("devices") private readonly deviceModel: Model<DeviceDto>,
   ) {
-    this.loadDB(); 
+    this.loaded = this.loadDB(); 
   }
 
   private addDB(createDeviceDto : DeviceDto) {
     const createdDevice = new this.deviceModel(createDeviceDto);
     
-    this.logger.log('New device: '+createdDevice._id);
+    this.logger.log('New device: '+createdDevice._id+' added to DB');
     return createdDevice.save();   // TODO debug if successfull
   }
 
@@ -43,7 +44,8 @@ export class DeviceService {
   
   private async loadDB() : Promise<void> {
     let dbDevices = await this.getDB();
-    for(let device of dbDevices) if(device.type !== DeviceType.MovingHead) this.logger.debug(await this.addDevice(device, false)); // TODO Debug if addDevice throws ERROR
+
+    for(let device of dbDevices) if(device.type !== DeviceType.MovingHead) this.logger.debug(this.addDevice(device, false)); // TODO Debug if addDevice throws ERROR
 
     this.logger.log(this.devices.length+" Devices loaded from DB");
 
@@ -57,6 +59,10 @@ export class DeviceService {
     for(let i = 0; i < this.devices.length; i++)
       if(this.devices[i].getDeviceId() == deviceId) return i;
     return -1;
+  }
+
+  public isLoaded() : Promise<void> {
+    return this.loaded;
   }
 
   public isValidDeviceId(deviceId : string) : boolean {
@@ -91,16 +97,13 @@ export class DeviceService {
     let device = new DMXDevice(deviceDto);
     if(!this.isValidDeviceAddress(device)) return this.logger.error('device address range overlaps with existing device'); // TODO
     
-    this.logger.debug("add device: "+device);
-    // this.logger.debug(device); 
-    
     if(addDB && deviceDto.type !== DeviceType.MovingHead) this.addDB(deviceDto);
 
     this.devices.push(device);
     device.init(false); // TODO maybe update false in order to prevent flicker on start up (give time to update values)
 
-    this.logger.log('successful added device');
-    return 'STATUS: successful added device';
+    if(addDB && deviceDto.type !== DeviceType.MovingHead) this.logger.log('successful added "'+deviceDto.name+'" on channel '+device.getStartAddress()+' to '+device.getEndAddress());
+    return 'STATUS: successful added "'+deviceDto.name+'" on channel '+device.getStartAddress()+' to '+device.getEndAddress();
   }
 
   public removeDevice(deviceId : string) : string | void {

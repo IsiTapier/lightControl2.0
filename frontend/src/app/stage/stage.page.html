@@ -3,19 +3,20 @@
     <ion-row>
       <ion-col size="auto">
         <ion-title>
-          Stage
+          {{isPreset?'Preset':'Stage'}}
         </ion-title>
       </ion-col>
       <ion-col >
-        <ion-button *ngFor="let mh of mhs; let i = index" (click)="activateMh(getMhById(mh.mhId), true)" [ngClass]="activeMh&&activeMh.id === mh.mhId ? 'buttonActive': ''" class="{{'mh'+i%7}}" >
+        <ion-button *ngFor="let mh of mhs; let i = index" (click)="activateMh(getMhById(mh.mhId), true)" [ngClass]="!mhService.isDisabled(mh.mhId)&&activeMh&&activeMh.id === mh.mhId ? 'buttonActive': ''" class="{{'mh'+i%7}}" [ngClass]="isPreset && mhService.isDisabled(mh.mhId) ? 'disabled' : ''">
           <div>{{mh.name}}</div>
         </ion-button>
       </ion-col>
+      <ng-content></ng-content>
       <ion-col size="auto">
-        <ion-button (click)="setHome()" *ngIf="activeMh&&showMenu">
+        <ion-button (click)="setHome()" *ngIf="activeMh&&showMenu&&!isPreset">
           set Home
         </ion-button>
-        <ion-button (click)="home()" *ngIf="showMenu">
+        <ion-button (click)="home()" *ngIf="showMenu&&!isPreset">
           Home
         </ion-button>
         <ion-button (click)="showMenu=!showMenu">
@@ -30,7 +31,7 @@
 
 <ion-content #stage class="background">
   <ion-fab slot="fixed" *ngFor="let mh of mhs; let i = index" class="mh" id={{mh.mhId}} [ngStyle]="{'height.px': getDotSize(), 'width.px': getDotSize(), 'margin-left.px': getDotX(mhService.getX(mh.mhId)), 'margin-top.px': getDotY(mhService.getY(mh.mhId))}">
-    <ion-fab-button (click)="activateDot($event)" class="{{'mh'+i}}">
+    <ion-fab-button (click)="activateDot($event)" class="{{'mh'+i}}" [ngClass]="isPreset && mhService.isDisabled(mh.mhId) ? 'disabled' : ''">
       <div *ngIf="activeMh&&activeMh.id === mh.mhId;then active else non_active"></div>
       <ng-template #active><ion-icon name="radio-button-on"></ion-icon></ng-template>
       <ng-template #non_active><ion-icon name="radio-button-off"></ion-icon></ng-template>
@@ -40,7 +41,6 @@
   <ion-card class="sideMenu" *ngIf="activeMh&&showMenu">  
     <ion-card-content>
       <ion-row>
-
         <!--<ion-col>
           <ngx-slider [(value)]="minValue"
                 [(highValue)]="maxValue"

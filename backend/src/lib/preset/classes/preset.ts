@@ -1,30 +1,38 @@
-import { MovingHead } from "src/lib/movingHead/classes/movingHead";
 import { Position } from "src/lib/movingHead/classes/position";
+import { PresetDto } from "../dto/preset.dto";
 
 export class Preset {
-    private static current_preset_id = 0;
-
-    private presetId : number;
-    private positions : Map<MovingHead, Position> = new Map<MovingHead, Position>();
+    private presetId : string;
+    private name : string;
+    private positions : Map<string, Position> = new Map<string, Position>();
     
-    constructor(ids : number[]) {
-        for(let id of ids) { // TODO
-            // if(DeviceManager.getDevice(id).getType() !== DeviceType.MovingHead) continue;
-            // TODO check if Device array can contain MovingHead object
-            let movingHead; // = DeviceManager.getDevice(id);
-            this.positions.set(movingHead, movingHead.getPositon());
+    toJSON(): any {
+        return {
+            presetId: this.presetId,
+            name: this.name,
+            positions: Object.fromEntries(this.positions),
         }
-        if(this.positions.size === 0) return null;
-        this.presetId = Preset.current_preset_id++;
     }
 
-    public getPresetId() {
+    constructor(preset : PresetDto) {
+       this.presetId = preset._id;
+       this.name = preset.name;
+       this.positions = preset.positions;
+    }
+
+    public isValid(): boolean {
+        return !!this.presetId && this.name !== '' && this.positions && this.positions.size > 0;
+    }
+
+    public isEqualToPreset(preset: PresetDto): boolean {
+        return  this.presetId === preset._id && this.name === preset.name && JSON.stringify(Array.from(this.positions.entries())) === JSON.stringify(Array.from(preset.positions.entries()));
+    }
+
+    public getPresetId(): string {
         return this.presetId;
     }
 
-    public load() {
-        for(let mh of this.positions.keys()) 
-            mh.setPosition(this.positions.get(mh));
+    public getPositions(): Map<string, Position> {
+        return this.positions;
     }
-
 }

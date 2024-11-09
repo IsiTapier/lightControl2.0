@@ -16,6 +16,7 @@ import { StagePageRoutingModule } from './stage-routing.module';
     StagePageRoutingModule,
     NgxSliderModule
   ],
-  declarations: [StagePage]
+  declarations: [StagePage],
+  exports: [StagePage]
 })
 export class StagePageModule {}

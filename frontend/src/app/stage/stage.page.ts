@@ -1,7 +1,8 @@
-import { ChangeDetectorRef, Component, ElementRef, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, Input, ViewChild } from '@angular/core';
 import type { GestureDetail } from '@ionic/angular';
 import { GestureController, Platform } from '@ionic/angular';
 import { MovingHeadService } from './moving-head.service';
+import { Subject, takeUntil } from 'rxjs';
 
 // Definitons
 const IMAGE_WIDTH = 964;
@@ -25,6 +26,10 @@ const LOADING_TIMEOUT = 2;
   styleUrls: ['stage.page.scss'],
 })
 export class StagePage {
+  @Input() isPreset : boolean = false;
+  @Input() isLive : boolean = true;
+  @Input() positions : any;
+  
   @ViewChild('stage', { read: ElementRef}) stage: ElementRef<HTMLIonContentElement>;
   @ViewChild('header', { read: ElementRef}) header: ElementRef<HTMLIonHeaderElement>;
   
@@ -37,43 +42,70 @@ export class StagePage {
   public mhs : any;
   private lastMhsAmount : number = 0;
 
+  private unsubscribe$ = new Subject();
 
   constructor(private el: ElementRef, private gestureCtrl: GestureController, private cdRef: ChangeDetectorRef, private platform: Platform, public mhService : MovingHeadService) {}
 
-  ngAfterViewInit() {  
+  ngAfterViewInit() {
     // listen to window resize
-    this.platform.resize.subscribe(async () => {
+    this.platform.resize.pipe(takeUntil(this.unsubscribe$)).subscribe(async () => {
       this.getScale();
     });
     
     // listen to updated mh positions
-    this.mhService.getMovings().subscribe((data) => { this.mhs = data; console.log("Received new mh data: "); console.log(this.mhs) });
-
+    this.mhService.getMovings().pipe(takeUntil(this.unsubscribe$)).subscribe((data) => { this.mhs = data; console.log("Received new mh data: "); console.log(this.mhs) });
+    
     // enable click Listener 
     this.clickListener();
-
+    
     // enable drag/move Listener when new mhs are added
-    this.mhService.getMovings().subscribe(async (mhs) => {
+    this.mhService.getMovings().pipe(takeUntil(this.unsubscribe$)).subscribe(async (mhs) => {
       let mhsAmount = mhs.length;
-      console.log("Moving Head Amount changed to: "+mhsAmount);
+      // if(mhs.length !== this.lastMhsAmount) return;
+      if(mhs.length !== this.lastMhsAmount) console.log("Moving Head Amount changed to: "+mhsAmount);
+
+      if(this.positions) this.mhService.disableMovingHeads(this.positions);
       
       // TODO proper execution when ready
       setTimeout(() => {
         this.cdRef.detectChanges();
-
+        
         // calculate scale
         this.getScale();
-
+        
         let movings = this.stage.nativeElement.children;
         if(movings.length !== mhsAmount) console.log("ERROR: Found unexpected amount of MH Icons!");
-
+        
         // add drag/move listener to every mh
         for(let i = 0; i < movings.length; i++) {
           // console.log(movings[i]);
           this.dragListener(movings[i]);
         }
       }, LOADING_TIMEOUT); 
-    });    
+    });   
+
+    setTimeout(() => {
+      if(!this.isLive) {
+        if(!this.positions) return console.error("An error is occured, no positions were provided");
+        this.mhService.disableUpdates(true);
+        this.mhService.loadPositions(this.positions, false);
+      }
+      if(this.positions) this.mhService.disableMovingHeads(this.positions);
+      this.mhService.forceUpdate();
+    }, LOADING_TIMEOUT);
+
+  }
+
+  ionViewWillEnter() {
+    this.mhService.enableAll();
+    this.mhService.disableUpdates(false);
+  }
+
+  ngOnDestroy() {
+    this.unsubscribe$.next(undefined);
+    this.unsubscribe$.complete();
+    this.mhService.enableAll();
+    this.mhService.disableUpdates(false);
   }
 
   // window click listener
@@ -88,7 +120,7 @@ export class StagePage {
 
   // mh button drag listener
   private dragListener(element: Element) {
-    console.log("Enable Draglistener for " +element.id);
+    // console.log("Enable Draglistener for " +element.id);
 
     // touch move
     element.addEventListener("touchmove", (e: any) => {
@@ -129,7 +161,6 @@ export class StagePage {
   }
 
   private onStart(element : Element) {
-    console.log("test")
     this.cdRef.detectChanges();
     this.activateMh(element);
   }
@@ -151,9 +182,16 @@ export class StagePage {
     this.mhService.setPosition(id, newX, newY);
   }
 
-  public activateMh(element : Element, allowDisable : boolean = false) {
-    if(allowDisable && this.activeMh && this.activeMh.id === element.id) this.activeMh = undefined;
-    else this.activeMh = element;
+  public activateMh(element : Element, allowDeselect : boolean = false) {
+    if(allowDeselect && this.activeMh && this.activeMh.id === element.id) {
+      if(this.isPreset && this.isLive) this.mhService.disableMovingHead(this.activeMh.id, true);
+      this.activeMh = undefined;
+    }
+    else {
+      this.activeMh = element;
+      // TODO only update if MH is disabled
+      if(this.isPreset && this.isLive) this.mhService.disableMovingHead(this.activeMh.id, false);
+    }
     console.log("activated mh "+element.id)
   }
 
