@@ -24,10 +24,10 @@
       </ion-col>
       <ion-col></ion-col>
       <ion-col size="auto">
-        <ion-button (click)="toggleMode('ADD')" color="primary">add</ion-button>
-        <ion-button (click)="toggleMode('DELETE')" [color]='mode==="DELETE"?"danger":"primary"'>delete</ion-button>
-        <ion-button (click)="toggleMode('EDIT')" [color]='mode==="EDIT"?"warning":"primary"'>edit</ion-button>
-        <ion-button (click)="toggleMode('PREVIEW')" [color]='mode==="PREVIEW"?"success":"primary"'>preview</ion-button>
+        <ion-button (click)="toggleMode('ADD')" color="primary">hinzufügen</ion-button>
+        <ion-button (click)="toggleMode('DELETE')" [color]='mode==="DELETE"?"danger":"primary"'>löschen</ion-button>
+        <ion-button (click)="toggleMode('EDIT')" [color]='mode==="EDIT"?"warning":"primary"'>ändern</ion-button>
+        <ion-button (click)="toggleMode('PREVIEW')" [color]='mode==="PREVIEW"?"success":"primary"'>vorschau</ion-button>
       </ion-col>
     </ion-row>
   </ion-toolbar>
@@ -127,7 +127,7 @@
       </ion-button>-->
     
       <ion-col >
-        <ion-button *ngFor="let preset of presets; let i = index" (click)="clickPreset(preset.presetId)" class="{{'preset'+i%7}}" >
+        <ion-button *ngFor="let preset of presets; let i = index" (click)="clickPreset(preset.presetId)" class="{{'preset'+i%7}}" id='{{preset.presetId}}'>
           <div>{{preset.name}}</div>
         </ion-button>
       </ion-col>

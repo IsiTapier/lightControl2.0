@@ -35,6 +35,11 @@ export class PresetsPage {
     this.reset()
   }
 
+  private getPresetById(id : string) {
+    let element = (<HTMLIonButtonElement>document.getElementById(id));
+    return element;
+  }
+
   public toggleMode(modeName : string) {
     let toMode : PresetMode = PresetMode[modeName as keyof typeof PresetMode];
     if(this.mode === toMode) return this.reset();
@@ -46,7 +51,7 @@ export class PresetsPage {
 
   public clickPreset(presetId : string) {
     switch(this.mode) {
-      case PresetMode.PRESETS: this.presetService.activatePreset(presetId); return;
+      case PresetMode.PRESETS: this.presetService.activatePreset(presetId); this.highlight(presetId); return;
       case PresetMode.ADD: return;
       case PresetMode.DELETE: break;
       case PresetMode.EDIT: this.previousPositions = new Map(this.mhService.getPositions()); this.presetService.activatePreset(presetId); break;
@@ -61,16 +66,22 @@ export class PresetsPage {
     this.presetName = preset.name;
   }
 
-  onInput(ev : any) {
+  private highlight(presetId : string) {
+    let element = this.getPresetById(presetId);
+    element.classList.add('highlight');
+    setTimeout(() => element.classList.remove('highlight'), 400);
+  }
+
+  public onInput(ev : any) {
     this.presetName = ev.target!.value;
   }
 
-  delete() {
+  public delete() {
     this.presetService.removePreset(this.selectedPresetId);
     this.reset();
   }
 
-  reset() {
+  public reset() {
     this.mode=PresetMode.PRESETS;
     this.selectedPresetId = '';
     this.selectedPositions = undefined;
@@ -82,7 +93,7 @@ export class PresetsPage {
     }
   }
 
-  submit() {
+  public submit() {
     // check valid
     if(!this.presetName) return;
     let positions = this.mhService.getPresetPositions();
