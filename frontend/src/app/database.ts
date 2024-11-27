@@ -2,7 +2,8 @@ import { HttpErrorResponse } from "@angular/common/http";
 import { throwError } from "rxjs";
 
 // export const ip = 'localhost';
-export const ip = '192.168.1.112';
+// export const ip = '192.168.1.112';
+export const ip = window.location.hostname;
 
 export var requestError = false;
 export var errorDetails : HttpErrorResponse; 
