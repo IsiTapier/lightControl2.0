@@ -58,7 +58,7 @@ export class MovingHeadService {
       if (a.name > b.name)  return  1;
                             return  0;
                               // TODO null all properties, which shouldn't cause rerender (Depends on what to show in settings)
-    }).map((mh : any) => ({...mh, x: 0, y: 0, height: 0, zoom: 0, position : {}, values: [], home: {}}));
+    }).map((mh : any) => ({...mh, position : {}, values: [], home: {}}));
   }
 
   // fetch every 100ms

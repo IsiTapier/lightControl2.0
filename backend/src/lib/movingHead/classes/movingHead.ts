@@ -15,11 +15,7 @@ export class MovingHead extends DMXDevice {
     private maxPan : number;
     private maxTilt : number;
     private home : Position = {x: 0, y : 0, height : 0, zoom : 0};
-    // TODO maybe unite in Position attribute  // IMpOORTANT mhservice frontend l.61
-    private x : number = 0;
-    private y : number = 0;
-    private height : number = 0;
-    private zoom : number = 0;
+    private position : Position;
 
     public constructor(mh : MovingHeadDto) {
         super(mh.device);
@@ -62,7 +58,7 @@ export class MovingHead extends DMXDevice {
     }
 
     public getPosition() : Position {
-        return {x: this.x, y: this.y, height: this.height, zoom: this.zoom};
+        return this.position;
     }
 
     public goHome() : void {
@@ -74,16 +70,13 @@ export class MovingHead extends DMXDevice {
     }
 
     public setHome(newHome : Position = null) : void {  // IMPORTANT: DB update only via call from movingHeadService
-        if(!newHome) this.home = this.getPosition();
+        if(!newHome) this.home = {...this.getPosition()};
         else this.home = newHome;
     }
 
     public setPosition(position : Position, update : boolean = true, force : boolean = false) : void {
-        this.updatePos(position.x, position.y, position.height, position.zoom, update, force);
-        this.x = position.x;
-        this.y = position.y;
-        this.height = position.height;
-        this.zoom = position.zoom;
+        this.updatePos(position, update, force);
+        this.position = {...position};
     }
 
     /*public setXY(x : number, y : number, update : boolean = false) : void {
@@ -102,14 +95,14 @@ export class MovingHead extends DMXDevice {
         this.height = height;
     }*/
 
-    private updatePos(x : number = this.x, y : number = this.y, height : number = this.height, zoom : number = this.zoom, update : boolean = false, force : boolean = false) : void {
+    private updatePos(p: Position, update : boolean = false, force : boolean = false) : void {
         let hasChanged = false;
-        if(force || this.calculatePan(x, y) !== this.calculatePan(this.x, this.y)) // force update for init
-            hasChanged = this.writeType(ChannelType.Pan, this.calculatePan(x, y), false).includes('STATUS');
-        if(force || this.calculateTilt(x, y, height) !== this.calculateTilt(this.x, this.y, this.height))
-            hasChanged = this.writeType(ChannelType.Tilt, this.calculateTilt(x, y, height), false).includes('STATUS') || hasChanged;
-        if(force || zoom !== this.zoom)
-            hasChanged = this.writeType(ChannelType.Zoom, zoom, false).includes('STATUS') || hasChanged;
+        if(force || this.calculatePan(p.x, p.y) !== this.calculatePan(this.position.x, this.position.y)) // force update for init
+            hasChanged = this.writeType(ChannelType.Pan, this.calculatePan(p.x, p.y), false).includes('STATUS');
+        if(force || this.calculateTilt(p.x, p.y, p.height) !== this.calculateTilt(this.position.x, this.position.y, this.position.height))
+            hasChanged = this.writeType(ChannelType.Tilt, this.calculateTilt(p.x, p.y, p.height), false).includes('STATUS') || hasChanged;
+        if(force || p.zoom !== this.position.zoom)
+            hasChanged = this.writeType(ChannelType.Zoom, p.zoom, false).includes('STATUS') || hasChanged;
         if(update && hasChanged) DMXService.update();
     }
 
