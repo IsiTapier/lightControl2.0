@@ -3,6 +3,7 @@ import { STAGE_HEIGHT, STAGE_X, STAGE_Y } from "../../settings";
 import { Position } from "./position";
 import { ChannelType } from "../../device/types/channelType";
 import { MovingHeadDto } from "../dto/movingHead.dto";
+import { DMXService } from "src/lib/dmx/dmx.service";
 
 export class MovingHead extends DMXDevice {
     private mhId : string;
@@ -46,9 +47,8 @@ export class MovingHead extends DMXDevice {
     }
 
     public initMh() : void {
-        this.init(false);
-        // this.updatePos(this.x, this.y, this.height, true); // use homepoint
-        this.setPosition(this.home); // TODO check update
+        // this.init(false);    // already called from device service
+        this.setPosition(this.home, false, true); // TODO check update
     }
 
     public setMhId(id : string) : void {
@@ -64,7 +64,7 @@ export class MovingHead extends DMXDevice {
     }
 
     public goHome() : void {
-        this.setPosition(this.home); // TODO check update
+        this.setPosition(this.home, true); // TODO check update
     }
 
     public getHome() : Position {
@@ -76,18 +76,14 @@ export class MovingHead extends DMXDevice {
         else this.home = newHome;
     }
 
-    // TODO general proper update
-
-    public setPosition(position : Position, update : boolean = true) : void {
-        this.updatePos(position.x, position.y, position.height, update);
+    public setPosition(position : Position, update : boolean = true, force : boolean = false) : void {
+        this.updatePos(position.x, position.y, position.height, update, force);
         this.x = position.x;
         this.y = position.y;
         this.height = position.height;
-        // this.setXY(position.x, position.y);
-        // this.setHeight(position.height, update);
     }
 
-    public setXY(x : number, y : number, update : boolean = false) : void {
+    /*public setXY(x : number, y : number, update : boolean = false) : void {
         this.updatePos(x, y, this.height, update);
         this.x = x;
         this.y = y;
@@ -101,16 +97,16 @@ export class MovingHead extends DMXDevice {
         if(height < 0) height = 0;
         this.updatePos(this.x, this.y, height, update);
         this.height = height;
-    }
+    }*/
 
-    private updatePos(x : number = this.x, y : number = this.y, height : number = this.height, update : boolean = false) : void {
-        if(update || this.calculatePan(x, y) != this.calculatePan(this.x, this.y))
-            this.writeType(ChannelType.Pan, this.calculatePan(x, y), update);
-        if(update || this.calculateTilt(x, y, height) != this.calculateTilt(this.x, this.y, this.height))
-            this.writeType(ChannelType.Tilt, this.calculateTilt(x, y, height), update);
-        // if(update || true) DMXService.update();  // TODO update or not? neccessary?
+    private updatePos(x : number = this.x, y : number = this.y, height : number = this.height, update : boolean = false, force : boolean = false) : void {
+        let hasChanged = false;
+        if(force || this.calculatePan(x, y) !== this.calculatePan(this.x, this.y)) // force update for init
+            hasChanged = this.writeType(ChannelType.Pan, this.calculatePan(x, y), false).includes('STATUS');
+        if(force || this.calculateTilt(x, y, height) !== this.calculateTilt(this.x, this.y, this.height))
+            hasChanged = this.writeType(ChannelType.Tilt, this.calculateTilt(x, y, height), false).includes('STATUS') || hasChanged;
+        if(update && hasChanged) DMXService.update();
     }
-
 
     private calculatePan(x : number, y : number) : number {
         x-=this.xOff;

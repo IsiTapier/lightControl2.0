@@ -159,11 +159,12 @@ export class MovingHeadService {
     return this.getMovingHead(mhId).writeChannel(channel, value, true);  // TODO update ??
   }
 
-  public update() : void {  // TODO neccessary ???
+  /*public update() : void {  // TODO neccessary ???
     let hasChanged = false;
-    for(let mh of this.movingHeads) hasChanged ||= mh.update();
+    for(let mh of this.movingHeads)
+      hasChanged = mh.update() || hasChanged;
     if(hasChanged) DMXService.update();
-  }
+  }*/
 
   public getPositions() : Position[] {
     let positions = [];

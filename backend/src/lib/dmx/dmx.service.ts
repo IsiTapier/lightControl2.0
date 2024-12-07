@@ -34,7 +34,7 @@ export class DMXService implements OnModuleInit {
     }
 
     public static setChannel(channel: number, value: number, update: boolean) {
-        // this.logger.debug("channel: "+channel+" value: "+value+" update: "+update);
+        this.logger.debug("channel: "+channel+" value: "+value+" update: "+update);
         // console.log("channel: "+channel+" value: "+value+" update: "+update);
         if(channel < 1 || channel > 512) return;
         if(value < 0 || value > 255) return;
@@ -94,7 +94,7 @@ export class DMXService implements OnModuleInit {
             });
             // immidiately replace data with init data and update
             this.sender.values = data;
-            this.sender.transmit();
+            this.update();
         }, initTime);
     }
 }

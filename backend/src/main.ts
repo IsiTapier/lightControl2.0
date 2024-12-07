@@ -8,7 +8,7 @@ dotenv.config();
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, { abortOnError: false, cors: true });
+  const app = await NestFactory.create(AppModule, { abortOnError: false, cors: true, logger: ['error', 'warn', 'log', 'fatal', 'verbose', /*'debug'*/ ]});
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true })); // TODO check options
   app.useLogger(new Logger());
   app.enableCors();
