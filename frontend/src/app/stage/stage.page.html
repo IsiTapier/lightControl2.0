@@ -13,10 +13,10 @@
       </ion-col>
       <ng-content></ng-content>
       <ion-col size="auto">
-        <ion-button (click)="setHome()" *ngIf="activeMh&&showMenu&&!isPreset">
+        <ion-button (click)="mhService.setHome(activeMh.id)" *ngIf="activeMh&&showMenu&&!isPreset">
           set Home
         </ion-button>
-        <ion-button (click)="home()" *ngIf="showMenu&&!isPreset">
+        <ion-button (click)="mhService.home()" *ngIf="showMenu&&!isPreset">
           Home
         </ion-button>
         <ion-button (click)="showMenu=!showMenu">
@@ -41,23 +41,17 @@
   <ion-card class="sideMenu" *ngIf="activeMh&&showMenu">  
     <ion-card-content>
       <ion-row>
-        <!--<ion-col>
-          <ngx-slider [(value)]="minValue"
-                [(highValue)]="maxValue"
-                [options]="options"
-                (userChangeStart)="onUserChangeStart($event)"
-                (userChange)="onUserChange($event)"
-                (userChangeEnd)="onUserChangeEnd($event)">
-          </ngx-slider>
-          <p>Zoom</p>
-        </ion-col> -->
+        <ion-col>
+          <ngx-slider [value]="mhService.getZoom(activeMh.id)" [options]="{floor: 0, ceil: 255, vertical: true, disabled: isPreset&&!isLive}" (userChange)="mhService.setZoom(activeMh.id, $event.value)"></ngx-slider>
+          <p>Zoom<p>
+            <ion-button (click)="mhService.setZoom(activeMh.id, 255)" [disabled]="isPreset&&!isLive">max</ion-button>
+            <ion-button (click)="mhService.setZoom(activeMh.id, 0)" [disabled]="isPreset&&!isLive">min</ion-button>
+        </ion-col>
         <ion-col>
           <ngx-slider [value]="mhService.getHeight(activeMh.id)" [options]="{floor: 0, ceil: 500, vertical: true, disabled: isPreset&&!isLive}" (userChange)="mhService.setHeight(activeMh.id, $event.value)"></ngx-slider>
           <p>Höhe (cm)</p>
-          <!-- <span> -->
-            <ion-button (click)="mhService.setHeight(activeMh.id, 0)" [disabled]="isPreset&&!isLive">Boden</ion-button>
             <ion-button (click)="mhService.setHeight(activeMh.id, 120)" [disabled]="isPreset&&!isLive">1,2m</ion-button>
-          <!-- </span> -->
+            <ion-button (click)="mhService.setHeight(activeMh.id, 0)" [disabled]="isPreset&&!isLive">Boden</ion-button>
         </ion-col>
       </ion-row>
     </ion-card-content>

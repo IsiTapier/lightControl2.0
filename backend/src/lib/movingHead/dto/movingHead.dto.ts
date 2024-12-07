@@ -12,7 +12,7 @@ export type MovingHeadDocument =  MovingHeadDto & Document;
 
 @Schema()
 export class MovingHeadDto {        // TODO force pan tilt channel
-    constructor(xOff : number, yOff : number, heightOff : number, panOff : number, tiltOff : number, maxPan : number, maxTilt : number, name : string, address : number, /*universe : number,*/    channels : Channel[], home : Position = {x: 0, y : 0, height : 0}) {
+    constructor(xOff : number, yOff : number, heightOff : number, panOff : number, tiltOff : number, maxPan : number, maxTilt : number, name : string, address : number, /*universe : number,*/    channels : Channel[], home : Position = {x: 0, y : 0, height : 0, zoom : 0}) {
         this._id = new Types.ObjectId().toString();
         this.xOff = xOff;
         this.yOff = yOff;
@@ -64,7 +64,7 @@ export class MovingHeadDto {        // TODO force pan tilt channel
     maxTilt : number;
 
     @Type(() => Position)
-    @ValidateIf((obj, value) => !value || value.x || value.y || value.height)
+    @ValidateIf((obj, value) => !value || value.x || value.y || value.height || value.zoom)
     @ValidateNested({ message: 'Please Enter Valid Home Position'})
     @Prop({ type: Position })
     home : Position;

@@ -26,7 +26,7 @@ export class PresetDto {
 
     // TODO propper check, wrong values possible !!!IMPORTANT
     // TODO crashes when random array is send
-    @Transform(({value}) => { let out = new Map<string, Position>(); if(!(Symbol.iterator in Object(value))) return null; for(let [[id, p]] of value) { out.set(id, new Position(p.x, p.y, p.height)) } return out; })
+    @Transform(({value}) => { let out = new Map<string, Position>(); if(!(Symbol.iterator in Object(value))) return null; for(let [[id, p]] of value) { out.set(id, new Position(p.x, p.y, p.height, p.zoom)) } return out; })
     // @IsValidPositions({ message: 'Please Enter valid positions data'})  
     @ValidateNested()
     @Type(() => Map<string, Position>)

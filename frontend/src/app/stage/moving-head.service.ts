@@ -12,6 +12,7 @@ export interface Position {
   x: number;
   y: number;
   height?: number;
+  zoom?: number;
 }
 
 @Injectable({
@@ -57,7 +58,7 @@ export class MovingHeadService {
       if (a.name > b.name)  return  1;
                             return  0;
                               // TODO null all properties, which shouldn't cause rerender (Depends on what to show in settings)
-    }).map((mh : any) => ({...mh, x: 0, y: 0, height: 0, values: [], home: {}}));
+    }).map((mh : any) => ({...mh, x: 0, y: 0, height: 0, zoom: 0, position : {}, values: [], home: {}}));
   }
 
   // fetch every 100ms
@@ -110,9 +111,6 @@ export class MovingHeadService {
 
     // update DB
     this.http.put('http://' + ip + ':3000/movingHeads/position/' + id, { position: position }, { responseType: 'text' }).pipe(catchError(handleError)).subscribe(() => { this.submitedPositions.set(id, tempPositon) });
-    
-    // // set height if undefined for later change comparison
-    // if (position.height === undefined) position.height = this.tempPositions.get(id).height;
 
     // enable cooldown
     setTimeout(() => {
@@ -143,20 +141,23 @@ export class MovingHeadService {
   }
 
   public getPosition(id: string) : Position {
-    return this.tempPositions.get(id) || {x: 0, y: 0, height: 0};
+    return this.tempPositions.get(id) || {x: 0, y: 0, height: 0, zoom: 0};
   }
 
-  public setPosition(id: string, x: number, y: number, height?: number, update: boolean = true) {
+  // TODO combine x y z heigt zoom into position attribute -> check that its updating correctly (instances)
+  public setPosition(id: string, p: Position, update: boolean = true) {
     // for preset preview
     if(this.blockUpdates && update) return;
 
-    let position: Position = { x: x, y: y, height: height };
+    let position: Position = {...p};
     // console.log(position)
 
     // if not specified, set height to old one for local use
     let tempPosition: Position = position;
     if(tempPosition.height === undefined)
       tempPosition.height = this.tempPositions.get(id).height;
+    if(tempPosition.zoom === undefined)
+      tempPosition.zoom = this.tempPositions.get(id).zoom;
 
     // update position in temp data
     this.tempPositions.set(id, tempPosition);
@@ -170,7 +171,20 @@ export class MovingHeadService {
   }
 
   public setHeight(id: string, height: number) {
-    this.setPosition(id, this.tempPositions.get(id).x, this.tempPositions.get(id).y, height);
+    let position = {...this.tempPositions.get(id)};
+    position.height = height;
+    this.setPosition(id, position);
+  }
+
+  public getZoom(id: string) : number {
+    if(!this.getPosition(id)) return 0;
+    return this.getPosition(id).zoom || 0;
+  }
+
+  public setZoom(id: string, zoom: number) {
+    let position = {...this.tempPositions.get(id)};
+    position.zoom = zoom;
+    this.setPosition(id, position);
   }
 
   public getXY(id: string) {
@@ -212,7 +226,7 @@ export class MovingHeadService {
     if(!positions) return;
 
     for(let [mhId, position] of positions) {
-      this.setPosition(mhId, position.x, position.y, position.height, update)
+      this.setPosition(mhId, position, update)
     }
   }
 

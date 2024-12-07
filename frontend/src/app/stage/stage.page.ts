@@ -149,7 +149,7 @@ export class StagePage {
     let el = this.stage.nativeElement;
     let height = el.clientHeight;
     // return when view not enabled
-    if(height === 0) return;
+    if(height === 0) return console.log("ERROR: view not enabled yet!");
     this.width = el.clientWidth;
 
     let size = this.width;
@@ -179,7 +179,7 @@ export class StagePage {
     let newX = (_x-(this.width-this.scale)/2)/this.scale*SAAL_WIDTH-SAAL_WIDTH/2;
     let newY = -((_y-this.header.nativeElement.offsetHeight)/this.scale*IMAGE_WIDTH-STAGE_OFFSET_IMAGE)/IMAGE_WIDTH*SAAL_WIDTH;
     
-    this.mhService.setPosition(id, newX, newY);
+    this.mhService.setPosition(id, {x: newX, y: newY});
   }
 
   public activateMh(element : Element, allowDeselect : boolean = false) {
@@ -231,15 +231,5 @@ export class StagePage {
     marginTop -= this.getDotSize()/2; 
 
     return marginTop;
-  }
-
-  // set home
-  public setHome() {
-    this.mhService.setHome(this.activeMh.id);
-  }
-
-  // drive to home
-  public home() {
-    this.mhService.home();
   }
 }
