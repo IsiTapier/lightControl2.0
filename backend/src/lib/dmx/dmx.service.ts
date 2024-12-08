@@ -94,7 +94,8 @@ export class DMXService implements OnModuleInit {
             });
             // immidiately replace data with init data and update
             this.sender.values = data;
-            this.update();
+            this.sender.transmit();
+            this.logger.debug("dmx sender initialized");
         }, initTime);
     }
 }
