@@ -58,7 +58,7 @@ export class MovingHeadService {
       if (a.name > b.name)  return  1;
                             return  0;
                               // TODO null all properties, which shouldn't cause rerender (Depends on what to show in settings)
-    }).map((mh : any) => ({...mh, position : {}, values: [], home: {}}));
+    }).map((mh : any) => ({...mh, position: {}, values: [], home: {}}));
   }
 
   // fetch every 100ms
@@ -106,6 +106,7 @@ export class MovingHeadService {
   // submit position updates
   private submitPosition(id: string, position: Position, tempPositon: Position) {
     // cooldown for multiple changes on same mh
+    // TODO cooldown seems to not work if you immediately change mhs
     if (this.cooldownMHs.includes(id)) return;
     this.cooldownMHs.push(id);
 
